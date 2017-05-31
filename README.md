@@ -28,8 +28,20 @@ These two methods (`query` and `update`) expect a SPARQL query/update and a bool
 
 ### Subscribe and Unsubscribe
 
-The `subscribe` primitive requires a SPARQL query, an alias for the subscription, an handler class (containing the handle method) and the boolean referred to security. The unsubscribe primitive only needs to know the ID of the subscription.
+The `subscribe` primitive requires a SPARQL query, an alias for the subscription, an handler class (containing the handle method) and the boolean referred to security. The `unsubscribe` primitive only needs to know the ID of the subscription.
 
 ## High-level APIs
 
 Not yet available.
+
+### The class Producer
+
+Stay Tuned!
+
+### The class Consumer
+
+Stay Tuned!
+
+### The class Aggregator
+
+Stay Tuned!

@@ -23,7 +23,7 @@ class ConnectionHandler:
     # constructor
     def __init__(self, host, path, registrationPath, tokenReqPath, # paths
                  httpPort, httpsPort, wsPort, wssPort, # ports
-                 secure, clientName): # security
+                 clientName): # security
 
         """Constructor of the ConnectionHandler class"""
 
@@ -40,7 +40,6 @@ class ConnectionHandler:
         self.path = path
         self.registrationPath = registrationPath
         self.tokenReqPath = tokenReqPath
-        self.secure = secure
         self.clientName = clientName
 
         # determine complete URIs
@@ -60,7 +59,7 @@ class ConnectionHandler:
 
 
     # do HTTP request
-    def request(self, sparql, isQuery):
+    def request(self, sparql, isQuery, secure):
 
         """Method to issue a SPARQL request over HTTP(S)"""
 
@@ -68,7 +67,7 @@ class ConnectionHandler:
         self.logger.debug("=== ConnectionHandler::request invoked ===")
         
         # if security is needed
-        if self.secure:
+        if secure:
 
             # if the client is not yet registered, then register!
             if not self.clientSecret:
@@ -77,7 +76,7 @@ class ConnectionHandler:
             # if a token is not present, request it!
             if not(self.token):
                 self.requestToken()
-
+                
             # perform the request
             self.logger.debug("Performing a secure SPARQL request")
             if isQuery:
@@ -90,7 +89,7 @@ class ConnectionHandler:
                            "Authorization": "Bearer " + self.token}
             r = requests.post(self.queryUpdateURIsecure, headers = headers, data = sparql, verify = False)        
             r.connection.close()
-
+            
             # check for errors on token validity
             if r.status_code == 401:
                 self.token = None                
@@ -125,11 +124,11 @@ class ConnectionHandler:
 
         # perform the request
         r = requests.post(self.registerURI, headers = headers, data = payload, verify = False)        
+        r.connection.close()
         if r.status_code == 201:
             jresponse = json.loads(r.text)
             cred = base64.b64encode(bytes(jresponse["client_id"] + ":" + jresponse["client_secret"], "utf-8"))
             self.clientSecret = "Basic " + cred.decode("utf-8")
-            print(self.clientSecret)
         else:
             raise RegistrationFailedException()
 
@@ -141,30 +140,28 @@ class ConnectionHandler:
         self.logger.debug("=== ConnectionHandler::requestToken invoked ===")
         
         # define headers and payload        
-        headers = {"Content-Type":"application/x-www-form-urlencoded", 
+        headers = {"Content-Type":"application/json", 
                    "Accept":"application/json",
                    "Authorization": self.clientSecret}    
-        print(headers)
 
         # perform the request
         r = requests.post(self.tokenReqURI, headers = headers, verify = False)        
+        r.connection.close()
         if r.status_code == 201:
             jresponse = json.loads(r.text)
             self.token = jresponse["access_token"]
         else:
-            print(r.status_code)
-            print(r.text)
             raise TokenRequestFailedException()
 
 
     # do open websocket
-    def openWebsocket(self, sparql, alias, handler):                         
+    def openWebsocket(self, sparql, alias, handler, secure):                         
 
         # debug
         self.logger.debug("=== ConnectionHandler::openWebsocket invoked ===")
 
         # secure?
-        if self.secure:
+        if secure:
 
             # if the client is not yet registered, then register!
             if not self.clientSecret:
@@ -173,10 +170,6 @@ class ConnectionHandler:
             # if a token is not present, request it!
             if not(self.token):
                 self.requestToken()
-
-            print(")================================================================")
-            print(self.token)
-            print(")================================================================")
 
         # initialization
         handler = handler
@@ -240,7 +233,7 @@ class ConnectionHandler:
             msg = {}
             msg["subscribe"] = sparql
             msg["alias"] = alias
-            if self.secure:
+            if secure:
                 msg["authorization"] = self.token
 
             # send subscription request
@@ -249,17 +242,13 @@ class ConnectionHandler:
 
 
         # configuring the websocket
-        if self.secure:
-            print(self.subscribeURIsecure)
-            self.logger.debug("****** OPENING SECURE WSS ********")
+        if secure:
             ws = websocket.WebSocketApp(self.subscribeURIsecure,
                                         on_message = on_message,
                                         on_error = on_error,
                                         on_close = on_close,
                                         on_open = on_open)                                        
         else:
-            print(self.subscribeURI)
-            self.logger.debug("****** OPENING WS ********")
             ws = websocket.WebSocketApp(self.subscribeURI,
                                         on_message = on_message,
                                         on_error = on_error,
@@ -267,7 +256,7 @@ class ConnectionHandler:
                                         on_open = on_open)
 
         # starting the websocket thread
-        if self.secure:
+        if secure:
             wst = threading.Thread(target=ws.run_forever, kwargs=dict(sslopt={"cert_reqs": ssl.CERT_NONE}))
         else:
             wst = threading.Thread(target=ws.run_forever)
@@ -277,11 +266,11 @@ class ConnectionHandler:
         # return
         while not subid:
             self.logger.debug("Waiting for subscription ID")
-            time.sleep(1)            
+            time.sleep(0.1)            
         return subid
 
 
-    def closeWebsocket(self, subid):
+    def closeWebsocket(self, subid, secure):
 
         # debug
         self.logger.debug("=== ConnectionHandler::closeWebSocket invoked ===")

@@ -3,17 +3,144 @@
 # global requirements
 import os
 import sys
+import time
 import uuid
 import unittest  
+from termcolor import colored
 
 # path modification
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # local import
 from sepy.KP import LowLevelKP
+from sepy.Exceptions import *
+
+# global variables
+subid = None
 
 # class
 class TestEverything(unittest.TestCase):
+
+    ################################################
+    #
+    # Initialization
+    #
+    ################################################
+
+    @classmethod
+    def setUpClass(cls):
+        
+        # debug print
+        print(colored("test::setUpClass> ", "blue", attrs=["bold"]) + "Initializing environment")
+        
+        # create an instance of the KP
+        cls.kp = LowLevelKP(conf["host"], conf["queryPath"], conf["registerPath"], conf["tokenPath"], conf["httpPort"], conf["httpsPort"], conf["wsPort"], conf["wssPort"], "TestUser", 110)
+        
+
+    ################################################
+    #
+    # Tests about Registration
+    #
+    ################################################
+        
+    def test_00_registration(self):
+
+        # debug print
+        print(colored("test::00> ", "blue", attrs=["bold"]) + "testing registration")        
+
+        success = True
+        try:
+            self.kp.connectionManager.register()
+        except RegistrationFailedException:
+            success = False
+        self.assertTrue(success)
+
+
+    def test_01_multiple_registration(self):
+
+        # debug print
+        print(colored("test::01> ", "blue", attrs=["bold"]) + "testing multiple registration")        
+
+        # try a new registation
+        exc = False
+        try:
+            self.kp.connectionManager.register()
+        except RegistrationFailedException:
+            exc = True
+        self.assertTrue(exc)
+
+
+    ################################################
+    #
+    # Tests about Tokens
+    #
+    ################################################    
+
+    def test_02_get_access_token(self):
+
+        # debug print
+        print(colored("test::02> ", "blue", attrs=["bold"]) + "testing token request")        
+
+        # initialize the exit status
+        success = True
+        
+        # get a token
+        try:
+            self.kp.connectionManager.requestToken()
+        except TokenRequestFailedException:
+            success = False
+            
+        # verify the result
+        self.assertTrue(success)
+
+
+    def test_03_token_expired(self):
+
+        # debug print
+        print(colored("test::03> ", "blue", attrs=["bold"]) + "testing token expiry")    
+
+        # wait for an eventual token to expire      
+        success = False
+        while not(success):
+            try:
+                s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+                time.sleep(1)
+            except TokenExpiredException:
+                success = True
+                break
+                
+        # check the result
+        self.assertTrue(success)
+
+
+    def test_04_refresh_token(self):
+
+        # debug print
+        print(colored("test::04> ", "blue", attrs=["bold"]) + "testing token refresh")        
+
+        # initialize the exit status
+        success = True
+        
+        # wait until token expires
+        while True:
+            time.sleep(1)
+            try:
+                s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+            except TokenExpiredException:
+                break
+                           
+        # request a new token
+        while True:
+            try:
+                self.kp.connectionManager.requestToken()
+                success = True
+                break
+            except TokenRequestFailedException:                
+                success = False
+
+        # verify the result
+        self.assertTrue(success)
+
 
     ################################################
     #
@@ -21,65 +148,162 @@ class TestEverything(unittest.TestCase):
     #
     ################################################
     
-    def test_unsecure_update(self):
+    def test_05_unsecure_update(self):
+
+        # debug print
+        print(colored("test::05> ", "blue", attrs=["bold"]) + "testing unsecure update")        
 
         # define a random ID and then a triple
         idd = str(uuid.uuid4())    
         triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
 
-        # create an instance of the KP
-        kp = LowLevelKP(conf["host"], conf["queryPath"], conf["registerPath"], conf["tokenPath"], conf["httpPort"], conf["httpsPort"], conf["wsPort"], conf["wssPort"], False, idd, 1000)
-
         # produce a SPARQL UPDATE to insert data and one to delete it
-        s1,r1 = kp.update('INSERT DATA {' + triple + '}')
-        s2,r2 = kp.update('DELETE DATA {' + triple + '}')
+        s1,r1 = self.kp.update('INSERT DATA {' + triple + '}', False)
+        s2,r2 = self.kp.update('DELETE DATA {' + triple + '}', False)
 
         # verify the result
         self.assertTrue(s1)
         self.assertTrue(s2)
 
 
-    # def test_secure_update(self):
-    #     self.assertFalse(True)
+    def test_06_secure_update(self):
 
-    # def test_unsecure_query(self):
-    #     self.assertFalse(True)
+        # debug print
+        print(colored("test::06> ", "blue", attrs=["bold"]) + "testing secure update")        
 
-    # def test_secure_query(self):
-    #     self.assertFalse(True)
+        # define a random ID and then a triple
+        idd = str(uuid.uuid4())    
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
 
-    # def test_notification(self):
-    #     self.assertFalse(True)
+        # produce a SPARQL UPDATE to insert data and one to delete it
+        try:
+            s1,r1 = self.kp.update('INSERT DATA {' + triple + '}', True)
+        except TokenExpiredException:
+            self.kp.connectionManager.requestToken()
+            s1,r1 = self.kp.update('INSERT DATA {' + triple + '}', True)
 
-    # def test_secure_subscribe(self):
-    #     self.assertFalse(True)
+        try:
+            s2,r2 = self.kp.update('DELETE DATA {' + triple + '}', True)
+        except TokenExpiredException:
+            self.kp.connectionManager.requestToken()
+            s2,r2 = self.kp.update('DELETE DATA {' + triple + '}', True)
 
-    # def test_subscribe_confirmed(self):
-    #     self.assertFalse(True)
+        # verify the result
+        self.assertTrue(s1)
+        self.assertTrue(s2)
 
-    # def test_secure_unsubscribe(self):
-    #     self.assertFalse(True)
 
-    # def test_unsecure_subscribe(self):
-    #     self.assertFalse(True)
+    ################################################
+    #
+    # Tests of the QUERY functionalities
+    #
+    ################################################
 
-    # def test_unsecure_unsubscribe(self):
-    #     self.assertFalse(True)
+    def test_07_unsecure_query(self):
 
-    # def test_registration(self):
-    #     self.assertFalse(True)
+        # debug print
+        print(colored("test::07> ", "blue", attrs=["bold"]) + "testing unsecure query")        
 
-    # def test_multiple_registration(self):
-    #     self.assertFalse(True)
+        # define a random ID and then a triple
+        idd = str(uuid.uuid4())    
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
 
-    # def test_access_token(self):
-    #     self.assertFalse(True)
+        # clear SEPA
+        s,r = self.kp.update('DELETE {?s ?p ?o} WHERE { ?s ?p ?o}', False)
 
-    # def test_refresh_token(self):
-    #     self.assertFalse(True)
+        # produce a SPARQL UPDATE to insert data 
+        s,r = self.kp.update('INSERT DATA {' + triple + '}', False)
 
-    # def test_token_not_expired(self):
-    #     self.assertFalse(True)
+        # query data
+        s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", False)
+
+        # delete data
+        s,r = self.kp.update('DELETE DATA {' + triple + '}', False)
+
+        # verify the result
+        self.assertTrue(s)
+
+
+    def test_08_secure_query(self):
+
+        # debug print
+        print(colored("test::08> ", "blue", attrs=["bold"]) + "testing secure query")        
+
+        # define a random ID and then a triple
+        idd = str(uuid.uuid4())    
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
+
+        # clear SEPA
+        s,r = self.kp.update('DELETE {?s ?p ?o} WHERE { ?s ?p ?o}', False)
+
+        # produce a SPARQL UPDATE to insert data 
+        s,r = self.kp.update('INSERT DATA {' + triple + '}', False)
+
+        # query data
+        try:
+            s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+        except TokenExpiredException:
+            self.kp.connectionManager.requestToken()
+            s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+
+        # delete data
+        s,r = self.kp.update('DELETE DATA {' + triple + '}', False)
+
+        # verify the result
+        self.assertTrue(s1)
+
+
+    ################################################
+    #
+    # Tests of the SUBSCRIBE functionalities
+    #
+    ################################################
+
+    def test_09_unsecure_subscribe(self):
+
+        # debug print
+        print(colored("test::09> ", "blue", attrs=["bold"]) + "testing unsecure subscribe")        
+
+        success = True
+        try:
+            global subid
+            subid = self.kp.subscribe("SELECT ?s WHERE { ?s ?p ?o }", "subjects", None, False)
+        except:
+            success = False
+        self.assertTrue(success)
+
+
+    def test_10_unsecure_unsubscribe(self):
+
+        # debug print
+        print(colored("test::10> ", "blue", attrs=["bold"]) + "testing unsecure unsubscribe")        
+
+        success = True
+        try:
+            global subid
+            self.kp.unsubscribe(subid, False)
+        except:
+            success = False
+        self.assertTrue(success)
+
+
+    def test_08_secure_subscribe(self):
+
+        success = True
+        try:
+            global subid
+            subid = self.kp.subscribe("SELECT ?s WHERE { ?s ?p ?o }", "subjects", None, True)
+        except:
+            success = False
+        self.assertTrue(success)
+
+
+    def test_09_secure_unsubscribe(self):
+
+        success = True
+        global subid
+        self.kp.unsubscribe(subid, True)
+
 
 # main
 if __name__ == "__main__":

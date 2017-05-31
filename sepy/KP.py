@@ -16,7 +16,7 @@ class LowLevelKP:
     # constructor
     def __init__(self, host, path, registrationPath, tokenReqPath, # paths
                  httpPort, httpsPort, wsPort, wssPort, # ports                 
-                 secure, clientName, logLevel): # security and debug
+                 clientName, logLevel): # security and debug
         
         """Constructor for the Low-level KP class"""
 
@@ -31,11 +31,31 @@ class LowLevelKP:
         # initialize handler
         self.connectionManager = ConnectionHandler(host, path, registrationPath, tokenReqPath, # paths
                                                    httpPort, httpsPort, wsPort, wssPort, # ports
-                                                   secure, clientName) # security
+                                                   clientName) # security
+
+
+    # load credentials
+    def load_credentials(self, credFile):
+        
+        # open the file and read configuration
+        file = open(credFile, "r") 
+        data = file.write(json.loads(file.read()))
+        self.connectionManager.clientSecret = data["cred"]
+        file.close()
+
+
+    # store credentials
+    def store_credentials(self, credFile):
+
+        # build a dict and save it
+        data = {"user":clientName, "cred": self.connectionManager.clientSecret}
+        file = open(credFile, "w") 
+        file.write(json.dumps(data)) 
+        file.close()
 
 
     # update
-    def update(self, sparqlUpdate):
+    def update(self, sparqlUpdate, secure):
 
         """This method is used to perform a SPARQL update"""
         
@@ -43,7 +63,7 @@ class LowLevelKP:
         self.logger.debug("=== KP::update invoked ===")
 
         # perform the update request
-        status, results = self.connectionManager.request(sparqlUpdate, False)                
+        status, results = self.connectionManager.request(sparqlUpdate, False, secure)                
 
         # return
         if int(status) == 200:
@@ -53,7 +73,7 @@ class LowLevelKP:
 
 
     # query
-    def query(self, sparqlQuery):
+    def query(self, sparqlQuery, secure):
 
         """This method is used to perform a SPARQL query"""
 
@@ -61,8 +81,8 @@ class LowLevelKP:
         self.logger.debug("=== KP::query invoked ===")
         
         # perform the query request
-        status, results = self.connectionManager.request(sparqlQuery, True)
-
+        status, results = self.connectionManager.request(sparqlQuery, True, secure)
+        
         # return 
         if int(status) == 200:
             jresults = json.loads(results)
@@ -75,22 +95,22 @@ class LowLevelKP:
         
 
     # susbscribe
-    def subscribe(self, sparql, alias, handler):
+    def subscribe(self, sparql, alias, handler, secure):
 
         # debug print
         self.logger.debug("=== KP::subscribe invoked ===")
       
         # start the subscription and return the ID
-        subid = self.connectionManager.openWebsocket(sparql, alias, handler)
+        subid = self.connectionManager.openWebsocket(sparql, alias, handler, secure)
         return subid
         
     
     # unsubscribe
-    def unsubscribe(self, subid):
+    def unsubscribe(self, subid, secure):
 
         # debug print
         self.logger.debug("=== KP::unsubscribe invoked ===")
 
         # close the subscription, given the id
-        self.connectionManager.closeWebsocket(subid)
+        self.connectionManager.closeWebsocket(subid, secure)
 

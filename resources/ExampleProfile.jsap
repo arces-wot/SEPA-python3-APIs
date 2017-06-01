@@ -1,0 +1,39 @@
+{
+    "parameters": {
+	"host": "localhost",
+	"port": "8000",
+	"path": "/sparql",
+	"scheme": "http",
+	"secureUpdate":{
+	    "port": 8443,
+	    "scheme": "https"
+	},
+	"secureQuery":{
+	    "port": 8443,
+	    "scheme": "https"
+	},
+	"secureSubscribe":{
+	    "port": 9443,
+	    "scheme": "wss"
+	},
+	"subscribe":{
+	    "port": 9000,
+	    "scheme": "ws"
+	},
+	"authorizationServer":{
+	    "register": "/oauth/register",
+	    "requestToken": "/oauth/token",
+	    "scheme": "https",
+	    "port": 8443
+	}
+    },
+    "updates":{
+        "INSERT_FOO": {
+	    "sparql":"INSERT DATA { <http://ns#exampleUser> <http://ns#hasAge> ?age }",
+	    "forcedBindings":{
+		"age":{"value":"", "type":"literal"}	
+	    }
+	}
+    },
+    "queries":{}
+}

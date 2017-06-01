@@ -21,7 +21,7 @@ class ConnectionHandler:
     """This is the ConnectionHandler class"""
 
     # constructor
-    def __init__(self, jparHandler):
+    def __init__(self, jparHandler, jsapHandler = None):
 
         """Constructor of the ConnectionHandler class"""
 
@@ -29,8 +29,29 @@ class ConnectionHandler:
         self.logger = logging.getLogger("sepaLogger")
         self.logger.debug("=== ConnectionHandler::__init__ invoked ===")
 
-        # store the JPAR Handler
+        # store the JPAR and JSAP Handlers
         self.jparHandler = jparHandler
+        self.jsapHandler = jsapHandler
+
+        # determine URIs
+        if jsapHandler:
+            self.queryURI = jsapHandler.queryURI
+            self.updateURI = jsapHandler.updateURI
+            self.queryURIsec = jsapHandler.queryURIsec
+            self.updateURIsec = jsapHandler.updateURIsec
+            self.subscribeURI = jsapHandler.subscribeURI
+            self.subscribeURIsec = jsapHandler.subscribeURIsec
+            self.registerURI = jsapHandler.registerURI
+            self.getTokenURI = jsapHandler.getTokenURI
+        else:
+            self.queryURI = jparHandler.queryURI
+            self.updateURI = jparHandler.updateURI
+            self.queryURIsec = jparHandler.queryURIsec
+            self.updateURIsec = jparHandler.updateURIsec
+            self.subscribeURI = jparHandler.subscribeURI
+            self.subscribeURIsec = jparHandler.subscribeURIsec
+            self.registerURI = jparHandler.registerURI
+            self.getTokenURI = jparHandler.getTokenURI
 
         # open subscriptions
         self.websockets = {}
@@ -61,13 +82,13 @@ class ConnectionHandler:
                 headers = {"Content-Type":"application/sparql-query", 
                            "Accept":"application/json",
                            "Authorization": "Bearer " + self.jparHandler.jwt}
-                r = requests.post(self.jparHandler.queryURIsec, headers = headers, data = sparql, verify = False)        
+                r = requests.post(self.queryURIsec, headers = headers, data = sparql, verify = False)        
                 r.connection.close()
             else:
                 headers = {"Content-Type":"application/sparql-update", 
                            "Accept":"application/json",
                            "Authorization": "Bearer " + self.jparHandler.jwt}
-                r = requests.post(self.jparHandler.updateURIsec, headers = headers, data = sparql, verify = False)        
+                r = requests.post(self.updateURIsec, headers = headers, data = sparql, verify = False)        
                 r.connection.close()
             
             # check for errors on token validity
@@ -85,11 +106,11 @@ class ConnectionHandler:
             self.logger.debug("Performing a non-secure SPARQL request")
             if isQuery:
                 headers = {"Content-Type":"application/sparql-query", "Accept":"application/json"}
-                r = requests.post(self.jparHandler.queryURI, headers = headers, data = sparql)
+                r = requests.post(self.queryURI, headers = headers, data = sparql)
                 r.connection.close()
             else:
                 headers = {"Content-Type":"application/sparql-update", "Accept":"application/json"}
-                r = requests.post(self.jparHandler.updateURI, headers = headers, data = sparql)
+                r = requests.post(self.updateURI, headers = headers, data = sparql)
                 r.connection.close()
             return r.status_code, r.text
 
@@ -110,7 +131,7 @@ class ConnectionHandler:
         payload = '{"client_identity":' + self.jparHandler.client_name + ', "grant_types":["client_credentials"]}'
 
         # perform the request
-        r = requests.post(self.jparHandler.registerURI, headers = headers, data = payload, verify = False)        
+        r = requests.post(self.registerURI, headers = headers, data = payload, verify = False)        
         r.connection.close()
         if r.status_code == 201:
 
@@ -146,7 +167,7 @@ class ConnectionHandler:
                    "Authorization": self.jparHandler.client_secret}    
 
         # perform the request
-        r = requests.post(self.jparHandler.getTokenURI, headers = headers, verify = False)        
+        r = requests.post(self.getTokenURI, headers = headers, verify = False)        
         r.connection.close()
         if r.status_code == 201:
             jresponse = json.loads(r.text)

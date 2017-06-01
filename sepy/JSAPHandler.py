@@ -67,7 +67,7 @@ class JSAPHandler:
             manField["port"] = self.sapDict["parameters"]["port"]
             manField["path"] = self.sapDict["parameters"]["path"]
         except KeyError as ex:
-            logger.error("Not all the mandatory fields have been specified")
+            self.logger.error("Not all the mandatory fields have been specified")
             raise SapParsingException from ex
 
         # build URIs

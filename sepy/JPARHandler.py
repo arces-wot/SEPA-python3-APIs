@@ -73,7 +73,7 @@ class JPARHandler:
             manField["port"] = self.jparDict["parameters"]["port"]
             manField["path"] = self.jparDict["parameters"]["path"]
         except KeyError as ex:
-            logger.error("Not all the mandatory fields have been specified")
+            self.logger.error("Not all the mandatory fields have been specified")
             raise SapParsingException from ex
 
         # build URIs
@@ -222,7 +222,4 @@ class JPARHandler:
 
         # store data into file
         jparFileStream = open(self.jparFile, "w")
-        jparFileStream.write(json.dumps({"client_id": self.client_id,
-                                        "client_secret": self.client_secret,
-                                         "jwt": self.jwt,
-                                         "expiry": self.expiry}))
+        jparFileStream.write(json.dumps(self.jparDict))

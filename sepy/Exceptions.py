@@ -8,3 +8,6 @@ class RegistrationFailedException(Exception):
 
 class TokenRequestFailedException(Exception):
     pass
+
+class SapParsingException(Exception):
+    pass

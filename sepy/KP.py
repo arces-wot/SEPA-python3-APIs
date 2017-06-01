@@ -6,6 +6,7 @@ import logging
 
 # local requirements
 from .Exceptions import *
+from .JPARHandler import *
 from .ConnectionHandler import *
 
 # class KP
@@ -14,9 +15,7 @@ class LowLevelKP:
     """This is the Low-level class used to develop a KP"""
 
     # constructor
-    def __init__(self, host, path, registrationPath, tokenReqPath, # paths
-                 httpPort, httpsPort, wsPort, wssPort, # ports                 
-                 clientName, logLevel): # security and debug
+    def __init__(self, jparFile, logLevel=10):
         
         """Constructor for the Low-level KP class"""
 
@@ -25,33 +24,14 @@ class LowLevelKP:
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
         self.logger.debug("=== KP::__init__ invoked ===")
 
+        # load the jpar file
+        self.jparHandler = JPARHandler(jparFile)
+
         # initialize data structures
         self.subscriptions = {}
 
         # initialize handler
-        self.connectionManager = ConnectionHandler(host, path, registrationPath, tokenReqPath, # paths
-                                                   httpPort, httpsPort, wsPort, wssPort, # ports
-                                                   clientName) # security
-
-
-    # load credentials
-    def load_credentials(self, credFile):
-        
-        # open the file and read configuration
-        file = open(credFile, "r") 
-        data = file.write(json.loads(file.read()))
-        self.connectionManager.clientSecret = data["cred"]
-        file.close()
-
-
-    # store credentials
-    def store_credentials(self, credFile):
-
-        # build a dict and save it
-        data = {"user":clientName, "cred": self.connectionManager.clientSecret}
-        file = open(credFile, "w") 
-        file.write(json.dumps(data)) 
-        file.close()
+        self.connectionManager = ConnectionHandler(self.jparHandler)
 
 
     # update

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 # global requirements
+import pdb
 import json
 import logging
 
@@ -33,6 +34,7 @@ class JPARHandler:
 
         # initialize user data
         self.client_id = None
+        self.client_name = None
         self.client_secret = None
         self.jwt = None
         self.expiry = None
@@ -49,6 +51,7 @@ class JPARHandler:
 
         # read data
         self.readClientId()
+        self.readClientName()
         self.readClientSecret()
         self.readToken()
         self.readNetworkConfig()
@@ -65,9 +68,9 @@ class JPARHandler:
         # read the mandatory fields
         manField = {}
         try:
-            manField["prot"] = self.jparDict["parameters"]["scheme"],
-            manField["host"] = self.jparDict["parameters"]["host"],
-            manField["port"] = self.jparDict["parameters"]["port"],
+            manField["prot"] = self.jparDict["parameters"]["scheme"]
+            manField["host"] = self.jparDict["parameters"]["host"]
+            manField["port"] = self.jparDict["parameters"]["port"]
             manField["path"] = self.jparDict["parameters"]["path"]
         except KeyError as ex:
             logger.error("Not all the mandatory fields have been specified")
@@ -75,11 +78,15 @@ class JPARHandler:
 
         # build URIs
         self.queryURI = self.buildURI(manField, "query")
+        print(self.queryURI)
         self.updateURI = self.buildURI(manField, "update")
         self.queryURIsec = self.buildURI(manField, "secureQuery")
         self.updateURIsec = self.buildURI(manField, "secureUpdate")
         self.subscribeURI = self.buildURI(manField, "subscribe")
         self.subscribeURIsec = self.buildURI(manField, "secureSubscribe")
+
+        # build registration URIs
+        self.registerURI, self.getTokenURI = self.buildRegistrationURIs(manField)
         
         
     # read client_id
@@ -89,6 +96,17 @@ class JPARHandler:
         
         try:
             self.client_id = self.jparDict["client_id"]
+        except KeyError:
+            pass
+
+
+    # read client_id
+    def readClientName(self):
+        
+        """Retrieves the client id form file, if present"""
+        
+        try:
+            self.client_name = self.jparDict["client_name"]
         except KeyError:
             pass
 
@@ -128,19 +146,19 @@ class JPARHandler:
 
         # read overwriting config for the connection protocol
         try:
-            oprot = self.jparDict["parameters"][dictKey]["scheme"],
+            oprot = self.jparDict["parameters"][dictKey]["scheme"]
         except KeyError:
             pass
 
         # read overwriting config for the connection host
         try:
-            ohost = self.jparDict["parameters"][dictKey]["host"],
+            ohost = self.jparDict["parameters"][dictKey]["host"]
         except KeyError:
             pass
 
         # read overwriting config for the connection port
         try:
-            oport = self.jparDict["parameters"][dictKey]["port"],
+            oport = self.jparDict["parameters"][dictKey]["port"]
         except KeyError:
             pass
 
@@ -151,10 +169,10 @@ class JPARHandler:
             pass
 
         # build and return the final URI
-        return "%s://%s:%s%s" % ((oprot if (oprot) else manField["prot"]),
-                                 (ohost if (ohost) else manField["host"]),
-                                 (oport if (oport) else manField["port"]),
-                                 (opath if (opath) else manField["path"]))
+        return "%s://%s:%s%s" % (oprot if oprot else manField["prot"],
+                                 ohost if ohost else manField["host"],
+                                 oport if oport else manField["port"],
+                                 opath if opath else manField["path"])
 
 
     # registration URIs
@@ -170,47 +188,37 @@ class JPARHandler:
 
         # read overwriting config for the connection protocol
         try:
-            oprot = self.jparDict["parameters"]["authorizationServer"]["scheme"],
+            oprot = self.jparDict["parameters"]["authorizationServer"]["scheme"]
         except KeyError:
             pass
 
         # read overwriting config for the connection host
         try:
-            ohost = self.jparDict["parameters"]["authorizationServer"]["host"],
+            ohost = self.jparDict["parameters"]["authorizationServer"]["host"]
         except KeyError:
             pass
 
         # read overwriting config for the connection port
         try:
-            oport = self.jparDict["parameters"]["authorizationServer"]["port"],
+            oport = self.jparDict["parameters"]["authorizationServer"]["port"]
         except KeyError:
             pass
 
         # build and return the final URI
-        return ["%s://%s:%s%s" % ((oprot if (oprot) else manField["prot"]),
-                                  (ohost if (ohost) else manField["host"]),
-                                  (oport if (oport) else manField["port"]),
+        return ["%s://%s:%s%s" % (oprot if (oprot) else manField["prot"],
+                                  ohost if (ohost) else manField["host"],
+                                  oport if (oport) else manField["port"],
                                   self.jparDict["parameters"]["authorizationServer"]["register"]),
-                "%s://%s:%s%s" % ((oprot if (oprot) else manField["prot"]),
-                                  (ohost if (ohost) else manField["host"]),
-                                  (oport if (oport) else manField["port"]),
+                "%s://%s:%s%s" % (oprot if (oprot) else manField["prot"],
+                                  ohost if (ohost) else manField["host"],
+                                  oport if (oport) else manField["port"],
                                   self.jparDict["parameters"]["authorizationServer"]["requestToken"])]
 
 
     # store config
-    def storeConfig(self, client_id, client_secret, jwt, expiry):
+    def storeConfig(self):
 
         """Method used to update the content of the JPAR file"""
-
-        # update the local data
-        if client_id:
-            self.client_id = client_id
-        if client_secret:
-            self.client_secret = client_secret        
-        if jwt:
-            self.jwt = jwt
-        if expiry:
-            self.expiry = expiry
 
         # store data into file
         jparFileStream = open(self.jparFile, "w")

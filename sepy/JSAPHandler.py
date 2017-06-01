@@ -62,9 +62,9 @@ class JSAPHandler:
         # read the mandatory fields
         manField = {}
         try:
-            manField["prot"] = self.sapDict["parameters"]["scheme"],
-            manField["host"] = self.sapDict["parameters"]["host"],
-            manField["port"] = self.sapDict["parameters"]["port"],
+            manField["prot"] = self.sapDict["parameters"]["scheme"]
+            manField["host"] = self.sapDict["parameters"]["host"]
+            manField["port"] = self.sapDict["parameters"]["port"]
             manField["path"] = self.sapDict["parameters"]["path"]
         except KeyError as ex:
             logger.error("Not all the mandatory fields have been specified")
@@ -143,19 +143,19 @@ class JSAPHandler:
 
         # read overwriting config for the connection protocol
         try:
-            oprot = self.sapDict["parameters"][dictKey]["scheme"],
+            oprot = self.sapDict["parameters"][dictKey]["scheme"]
         except KeyError:
             pass
 
         # read overwriting config for the connection host
         try:
-            ohost = self.sapDict["parameters"][dictKey]["host"],
+            ohost = self.sapDict["parameters"][dictKey]["host"]
         except KeyError:
             pass
 
         # read overwriting config for the connection port
         try:
-            oport = self.sapDict["parameters"][dictKey]["port"],
+            oport = self.sapDict["parameters"][dictKey]["port"]
         except KeyError:
             pass
 
@@ -184,19 +184,19 @@ class JSAPHandler:
 
         # read overwriting config for the connection protocol
         try:
-            oprot = self.sapDict["parameters"]["authorizationServer"]["scheme"],
+            oprot = self.sapDict["parameters"]["authorizationServer"]["scheme"]
         except KeyError:
             pass
 
         # read overwriting config for the connection host
         try:
-            ohost = self.sapDict["parameters"]["authorizationServer"]["host"],
+            ohost = self.sapDict["parameters"]["authorizationServer"]["host"]
         except KeyError:
             pass
 
         # read overwriting config for the connection port
         try:
-            oport = self.sapDict["parameters"]["authorizationServer"]["port"],
+            oport = self.sapDict["parameters"]["authorizationServer"]["port"]
         except KeyError:
             pass
 

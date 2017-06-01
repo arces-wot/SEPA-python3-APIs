@@ -11,3 +11,6 @@ class TokenRequestFailedException(Exception):
 
 class SapParsingException(Exception):
     pass
+
+class JPARParsingException(Exception):
+    pass

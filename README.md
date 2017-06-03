@@ -36,7 +36,7 @@ The high-level APIs implement the **PAC programming pattern**. Throught this pat
 
 ### The class Producer
 
-The class **Producer** implements a Knowledge Processor that only performs updates of the knowledge base. The class `Producer` inherits from the `KP` class. To create an instance of the class Producer:
+The class `Producer` implements a Knowledge Processor that only performs updates of the knowledge base. The class `Producer` inherits from the `KP` class. To create an instance of the class Producer:
 
 ```
 p = Producer(jsapFile, jparFile)
@@ -50,8 +50,18 @@ p.produce(MY_UPDATE, {"ageValue":"30"}, True)
 ```
 
 ### The class Consumer
+The class `Consumer` implements a Knowledge Processor that only subscribes to a subgraph of the knowledge base. The class `Consumer` inherits from the `KP` class. To create an instance of the class Consumer:
 
-Stay Tuned!
+```
+c = Consumer(jsapFile, jparFile)
+```
+The constructor requires a jsap and a jpar file: the first contains the appilcation profile, while the second the profile of the user.
+
+To start the subscription we invoke the method `consume` specifying the friendly name of the persistent query (corresponding to a given SPARQL query in the jsap file), the forced bindings in form of a Python dictionary, an alias for the final query, the handler class and an optional boolean value to enable/disable the security mechanisms (default = disabled).
+
+```
+c.consume("READ_AGE", {}, "age", BasicHandler, False)
+```
 
 ### The class Aggregator
 

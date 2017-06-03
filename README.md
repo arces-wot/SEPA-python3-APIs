@@ -32,11 +32,22 @@ The `subscribe` primitive requires a SPARQL query, an alias for the subscription
 
 ## High-level APIs
 
-Not yet available.
+The high-level APIs implement the **PAC programming pattern**. Throught this pattern, an application can be developed with very simple programs named producers, consumers or aggregator depending on their role.
 
 ### The class Producer
 
-Stay Tuned!
+The class **Producer** implements a Knowledge Processor that only performs updates of the knowledge base. The class `Producer` inherits from the `KP` class. To create an instance of the class Producer:
+
+```
+p = Producer(jsapFile, jparFile)
+```
+The constructor requires a jsap and a jpar file: the first contains the appilcation profile, while the second the profile of the user.
+
+To update the knowledge base we invoke the method `produce` specifying the friendly name of the update (corresponding to a given SPARQL update in the jsap file), the forced bindings in form of a Python dictionary and an optional boolean value to enable/disable the security mechanisms (default = disabled).
+
+```
+p.produce(MY_UPDATE, {"ageValue":"30"}, True)
+```
 
 ### The class Consumer
 

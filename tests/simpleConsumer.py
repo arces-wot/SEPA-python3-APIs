@@ -8,7 +8,8 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # local import
-from sepy.Producer import *
+from sepy.Consumer import *
+from sepy.BasicHandler import *
 
 if __name__ == "__main__":
     
@@ -17,7 +18,7 @@ if __name__ == "__main__":
     jparFile = "../resources/UserProfile.jpar"
     
     # create a producer
-    kp = Producer(jsapFile, jparFile)
+    kp = Consumer(jsapFile, jparFile)
 
     # produce
-    kp.produce("INSERT_AGE", {"age":25})
+    kp.consume("READ_AGE", {}, "age", BasicHandler, False)

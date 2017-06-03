@@ -231,7 +231,7 @@ class ConnectionHandler:
                 self.logger.debug("Received: " + message)
 
                 # invoke the handler
-                handler.handle()
+                handler.handle(message)
 
 
         # on_error callback

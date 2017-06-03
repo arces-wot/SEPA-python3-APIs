@@ -28,12 +28,17 @@
 	}
     },
     "updates":{
-        "INSERT_FOO": {
+        "INSERT_AGE": {
 	    "sparql":"INSERT DATA { <http://ns#exampleUser> <http://ns#hasAge> ?age }",
 	    "forcedBindings":{
 		"age":{"value":"", "type":"literal"}	
 	    }
 	}
     },
-    "queries":{}
+    "queries":{
+	"READ_AGE" : {
+	    "sparql":"SELECT ?age WHERE { ?s <http://ns#hasAge> ?age }",
+	    "forcedBindings":{}
+	}	
+    }
 }

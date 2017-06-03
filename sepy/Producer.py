@@ -9,7 +9,7 @@ from .KP import *
 
 
 # the Producer
-class Producer:
+class Producer(KP):
 
     """The Producer. A simple KP implementing only updates"""
 
@@ -18,15 +18,11 @@ class Producer:
 
         """Constructor for the Producer class"""
 
+        # call the superclass constructor
+        KP.__init__(self, sapFile, jparFile)
+        
         # logger
-        self.logger = logging.getLogger("sepaLogger")
         self.logger.debug("=== Producer::__init__ invoked ===")
-
-        # create an instance of the JSAPHandler
-        self.jsap = JSAPHandler(sapFile)
-
-        # create an instance of the LowLevel KP
-        self.kp = LowLevelKP(jparFile, self.jsap)
 
 
     # produce

@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: sepy
+Version: 0.1
+Summary:  Client-side libraries for the SEPA platform (Python3) 
+Home-page: https://github.com/arces-wot/SEPA-python3-APIs
+Author: Fabio Viola
+Author-email: fabio.viola@unibo.it
+License: GPLv3
+Description: UNKNOWN
+Platform: UNKNOWN

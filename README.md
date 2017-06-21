@@ -1,6 +1,19 @@
 # SEPA-python3-APIs
 Client-side libraries for the SEPA platform (Python3)
 
+## Installation
+
+Go to the folder named `dist`, uncompress the archive using `tar`, then type the usual:
+
+```python setup.py build```
+
+and
+
+```python setup.py install```
+
+(this one as root).
+
+
 ## Low-level APIs
 
 These APIs allows to develop a client for the SEPA platform using a low-level but simple interface. First of all the class LowLevel must be initialized. Then the standard methods to interact with the broker are available.

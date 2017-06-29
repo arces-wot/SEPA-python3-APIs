@@ -66,27 +66,54 @@ class JPARHandler:
         self.logger.debug("=== JPARHandler::readNetworkConfig invoked ===")
 
         # read the mandatory fields
-        manField = {}
         try:
-            manField["prot"] = self.jparDict["parameters"]["scheme"]
-            manField["host"] = self.jparDict["parameters"]["host"]
-            manField["port"] = self.jparDict["parameters"]["port"]
-            manField["path"] = self.jparDict["parameters"]["path"]
+        
+            # URI for update
+            self.updateURI = "http://%s:%s%s" % (self.jparDict["parameters"]["host"],
+                                                 self.jparDict["parameters"]["ports"]["http"],
+                                                 self.jparDict["parameters"]["paths"]["update"])
+            
+            # URI for query        
+            self.queryURI = "http://%s:%s%s" % (self.jparDict["parameters"]["host"],
+                                                self.jparDict["parameters"]["ports"]["http"],
+                                                self.jparDict["parameters"]["paths"]["query"])
+            
+            # URI for secure update
+            self.updateURIsec = "https://%s:%s%s%s" % (self.jparDict["parameters"]["host"],
+                                                     self.jparDict["parameters"]["ports"]["https"],
+                                                     self.jparDict["parameters"]["paths"]["securePath"],
+                                                     self.jparDict["parameters"]["paths"]["update"])
+            
+            # URI for secure query        
+            self.queryURIsec = "https://%s:%s%s%s" % (self.jparDict["parameters"]["host"],
+                                                    self.jparDict["parameters"]["ports"]["https"],
+                                                    self.jparDict["parameters"]["paths"]["securePath"],
+                                                    self.jparDict["parameters"]["paths"]["query"])
+            
+            # URI for subscriptions
+            self.subscribeURI = "ws://%s:%s%s" % (self.jparDict["parameters"]["host"],
+                                                  self.jparDict["parameters"]["ports"]["ws"],
+                                                  self.jparDict["parameters"]["paths"]["subscribe"])
+        
+            # URI for secure subscriptions
+            self.subscribeURIsec = "wss://%s:%s%s%s" % (self.jparDict["parameters"]["host"],
+                                                        self.jparDict["parameters"]["ports"]["wss"],
+                                                        self.jparDict["parameters"]["paths"]["securePath"],
+                                                        self.jparDict["parameters"]["paths"]["subscribe"])
+
+            # URI for registration
+            self.registerURI = "https://%s:%s%s" % (self.jparDict["parameters"]["host"],
+                                                   self.jparDict["parameters"]["ports"]["https"],
+                                                   self.jparDict["parameters"]["paths"]["register"])
+            
+            # URI for token request
+            self.getTokenURI = "https://%s:%s%s" % (self.jparDict["parameters"]["host"],
+                                                    self.jparDict["parameters"]["ports"]["https"],
+                                                    self.jparDict["parameters"]["paths"]["tokenRequest"])
+            
         except KeyError as ex:
             self.logger.error("Not all the mandatory fields have been specified")
-            raise SapParsingException from ex
-
-        # build URIs
-        self.queryURI = self.buildURI(manField, "query")
-        print(self.queryURI)
-        self.updateURI = self.buildURI(manField, "update")
-        self.queryURIsec = self.buildURI(manField, "secureQuery")
-        self.updateURIsec = self.buildURI(manField, "secureUpdate")
-        self.subscribeURI = self.buildURI(manField, "subscribe")
-        self.subscribeURIsec = self.buildURI(manField, "secureSubscribe")
-
-        # build registration URIs
-        self.registerURI, self.getTokenURI = self.buildRegistrationURIs(manField)
+            raise JPARParsingException from ex
         
         
     # read client_id
@@ -131,88 +158,6 @@ class JPARHandler:
             self.jwt = self.jparDict["jwt"]
         except KeyError:
             pass
-
-
-    # utility to build URIs
-    def buildURI(self, manField, dictKey):
-
-        """Utility to build URIs based on the configuration"""
-
-        # debug
-        self.logger.debug("=== JPARHandler::buildURI invoked ===")
-        
-        # initialize overwriting variables
-        oprot = ohost = oport = opath = None
-
-        # read overwriting config for the connection protocol
-        try:
-            oprot = self.jparDict["parameters"][dictKey]["scheme"]
-        except KeyError:
-            pass
-
-        # read overwriting config for the connection host
-        try:
-            ohost = self.jparDict["parameters"][dictKey]["host"]
-        except KeyError:
-            pass
-
-        # read overwriting config for the connection port
-        try:
-            oport = self.jparDict["parameters"][dictKey]["port"]
-        except KeyError:
-            pass
-
-        # read overwriting config for the path
-        try:
-            opath = self.jparDict["parameters"][dictKey]["path"]
-        except KeyError:
-            pass
-
-        # build and return the final URI
-        return "%s://%s:%s%s" % (oprot if oprot else manField["prot"],
-                                 ohost if ohost else manField["host"],
-                                 oport if oport else manField["port"],
-                                 opath if opath else manField["path"])
-
-
-    # registration URIs
-    def buildRegistrationURIs(self, manField):
-
-        """Utility to build registration URIs based on the configuration"""
-
-        # debug
-        self.logger.debug("=== JPARHandler::buildRegistrationURI invoked ===")
-        
-        # initialize overwriting variables
-        oprot = ohost = oport = None    
-
-        # read overwriting config for the connection protocol
-        try:
-            oprot = self.jparDict["parameters"]["authorizationServer"]["scheme"]
-        except KeyError:
-            pass
-
-        # read overwriting config for the connection host
-        try:
-            ohost = self.jparDict["parameters"]["authorizationServer"]["host"]
-        except KeyError:
-            pass
-
-        # read overwriting config for the connection port
-        try:
-            oport = self.jparDict["parameters"]["authorizationServer"]["port"]
-        except KeyError:
-            pass
-
-        # build and return the final URI
-        return ["%s://%s:%s%s" % (oprot if (oprot) else manField["prot"],
-                                  ohost if (ohost) else manField["host"],
-                                  oport if (oport) else manField["port"],
-                                  self.jparDict["parameters"]["authorizationServer"]["register"]),
-                "%s://%s:%s%s" % (oprot if (oprot) else manField["prot"],
-                                  ohost if (ohost) else manField["host"],
-                                  oport if (oport) else manField["port"],
-                                  self.jparDict["parameters"]["authorizationServer"]["requestToken"])]
 
 
     # store config

@@ -9,7 +9,7 @@ class RegistrationFailedException(Exception):
 class TokenRequestFailedException(Exception):
     pass
 
-class SapParsingException(Exception):
+class JSAPParsingException(Exception):
     pass
 
 class JPARParsingException(Exception):

@@ -10,10 +10,7 @@ sepy/JSAPHandler.py
 sepy/KP.py
 sepy/LowLevelKP.py
 sepy/Producer.py
-sepy/SAPparser.py
 sepy/__init__.py
-sepy/constants.py
-sepy/example.py
 sepy.egg-info/PKG-INFO
 sepy.egg-info/SOURCES.txt
 sepy.egg-info/dependency_links.txt

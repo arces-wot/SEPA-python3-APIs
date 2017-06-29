@@ -23,10 +23,10 @@ class JSAPHandler:
         # open sapFile
         try:
             with open(sapFile) as sapFileStream:
-                self.sapDict = json.load(sapFileStream)
+                self.jsapDict = json.load(sapFileStream)
         except Exception as e:
             self.logger.error("Parsing of the JSAP file failed")
-            raise SapParsingException from e
+            raise JSAPParsingException from e
 
         # initialize URIs
         self.queryURI = None
@@ -60,26 +60,54 @@ class JSAPHandler:
         self.logger.debug("=== JSAPHandler::readNetworkConfig invoked ===")
 
         # read the mandatory fields
-        manField = {}
         try:
-            manField["prot"] = self.sapDict["parameters"]["scheme"]
-            manField["host"] = self.sapDict["parameters"]["host"]
-            manField["port"] = self.sapDict["parameters"]["port"]
-            manField["path"] = self.sapDict["parameters"]["path"]
+        
+            # URI for update
+            self.updateURI = "http://%s:%s%s" % (self.jsapDict["parameters"]["host"],
+                                                 self.jsapDict["parameters"]["ports"]["http"],
+                                                 self.jsapDict["parameters"]["paths"]["update"])
+            
+            # URI for query        
+            self.queryURI = "http://%s:%s%s" % (self.jsapDict["parameters"]["host"],
+                                                self.jsapDict["parameters"]["ports"]["http"],
+                                                self.jsapDict["parameters"]["paths"]["query"])
+            
+            # URI for secure update
+            self.updateURIsec = "https://%s:%s%s%s" % (self.jsapDict["parameters"]["host"],
+                                                     self.jsapDict["parameters"]["ports"]["https"],
+                                                     self.jsapDict["parameters"]["paths"]["securePath"],
+                                                     self.jsapDict["parameters"]["paths"]["update"])
+            
+            # URI for secure query        
+            self.queryURIsec = "https://%s:%s%s%s" % (self.jsapDict["parameters"]["host"],
+                                                    self.jsapDict["parameters"]["ports"]["https"],
+                                                    self.jsapDict["parameters"]["paths"]["securePath"],
+                                                    self.jsapDict["parameters"]["paths"]["query"])
+            
+            # URI for subscriptions
+            self.subscribeURI = "ws://%s:%s%s" % (self.jsapDict["parameters"]["host"],
+                                                  self.jsapDict["parameters"]["ports"]["ws"],
+                                                  self.jsapDict["parameters"]["paths"]["subscribe"])
+        
+            # URI for secure subscriptions
+            self.subscribeURIsec = "wss://%s:%s%s%s" % (self.jsapDict["parameters"]["host"],
+                                                        self.jsapDict["parameters"]["ports"]["wss"],
+                                                        self.jsapDict["parameters"]["paths"]["securePath"],
+                                                        self.jsapDict["parameters"]["paths"]["subscribe"])
+
+            # URI for registration
+            self.registerURI = "https://%s:%s%s" % (self.jsapDict["parameters"]["host"],
+                                                   self.jsapDict["parameters"]["ports"]["https"],
+                                                   self.jsapDict["parameters"]["paths"]["register"])
+            
+            # URI for token request
+            self.getTokenURI = "https://%s:%s%s" % (self.jsapDict["parameters"]["host"],
+                                                    self.jsapDict["parameters"]["ports"]["https"],
+                                                    self.jsapDict["parameters"]["paths"]["tokenRequest"])
+            
         except KeyError as ex:
             self.logger.error("Not all the mandatory fields have been specified")
-            raise SapParsingException from ex
-
-        # build URIs
-        self.queryURI = self.buildURI(manField, "query")
-        self.updateURI = self.buildURI(manField, "update")
-        self.queryURIsec = self.buildURI(manField, "secureQuery")
-        self.updateURIsec = self.buildURI(manField, "secureUpdate")
-        self.subscribeURI = self.buildURI(manField, "subscribe")
-        self.subscribeURIsec = self.buildURI(manField, "secureSubscribe")
-
-        # build registration URIs
-        self.registerURI, self.getTokenUri = self.buildRegistrationURIs(manField)
+            raise JSAPParsingException from ex
 
 
     # read namespaces
@@ -92,8 +120,8 @@ class JSAPHandler:
         
         # iterate over the namespaces keys
         try:
-            for nsname in self.sapDict["namespaces"].keys():
-                self.namespaces[nsname] = self.sapDict["namespaces"][nsname]
+            for nsname in self.jsapDict["namespaces"].keys():
+                self.namespaces[nsname] = self.jsapDict["namespaces"][nsname]
         except KeyError:
             pass
 
@@ -108,8 +136,8 @@ class JSAPHandler:
 
         # iterate over queries
         try:
-            for qname in self.sapDict["queries"]:
-                self.queries[qname] = self.sapDict["queries"][qname]
+            for qname in self.jsapDict["queries"]:
+                self.queries[qname] = self.jsapDict["queries"][qname]
         except KeyError:
             pass
 
@@ -124,8 +152,8 @@ class JSAPHandler:
 
         # iterate over updates
         try:
-            for uname in self.sapDict["updates"]:
-                self.updates[uname] = self.sapDict["updates"][uname]
+            for uname in self.jsapDict["updates"]:
+                self.updates[uname] = self.jsapDict["updates"][uname]
         except KeyError:
             pass
 
@@ -143,25 +171,25 @@ class JSAPHandler:
 
         # read overwriting config for the connection protocol
         try:
-            oprot = self.sapDict["parameters"][dictKey]["scheme"]
+            oprot = self.jsapDict["parameters"][dictKey]["scheme"]
         except KeyError:
             pass
 
         # read overwriting config for the connection host
         try:
-            ohost = self.sapDict["parameters"][dictKey]["host"]
+            ohost = self.jsapDict["parameters"][dictKey]["host"]
         except KeyError:
             pass
 
         # read overwriting config for the connection port
         try:
-            oport = self.sapDict["parameters"][dictKey]["port"]
+            oport = self.jsapDict["parameters"][dictKey]["port"]
         except KeyError:
             pass
 
         # read overwriting config for the path
         try:
-            opath = self.sapDict["parameters"][dictKey]["path"]
+            opath = self.jsapDict["parameters"][dictKey]["path"]
         except KeyError:
             pass
 
@@ -184,19 +212,19 @@ class JSAPHandler:
 
         # read overwriting config for the connection protocol
         try:
-            oprot = self.sapDict["parameters"]["authorizationServer"]["scheme"]
+            oprot = self.jsapDict["parameters"]["authorizationServer"]["scheme"]
         except KeyError:
             pass
 
         # read overwriting config for the connection host
         try:
-            ohost = self.sapDict["parameters"]["authorizationServer"]["host"]
+            ohost = self.jsapDict["parameters"]["authorizationServer"]["host"]
         except KeyError:
             pass
 
         # read overwriting config for the connection port
         try:
-            oport = self.sapDict["parameters"]["authorizationServer"]["port"]
+            oport = self.jsapDict["parameters"]["authorizationServer"]["port"]
         except KeyError:
             pass
 
@@ -204,11 +232,11 @@ class JSAPHandler:
         return ["%s://%s:%s%s" % ((oprot if (oprot) else manField["prot"]),
                                   (ohost if (ohost) else manField["host"]),
                                   (oport if (oport) else manField["port"]),
-                                  self.sapDict["parameters"]["authorizationServer"]["register"]),
+                                  self.jsapDict["parameters"]["authorizationServer"]["register"]),
                 "%s://%s:%s%s" % ((oprot if (oprot) else manField["prot"]),
                                   (ohost if (ohost) else manField["host"]),
                                   (oport if (oport) else manField["port"]),
-                                  self.sapDict["parameters"]["authorizationServer"]["requestToken"])]
+                                  self.jsapDict["parameters"]["authorizationServer"]["requestToken"])]
 
 
     # get query

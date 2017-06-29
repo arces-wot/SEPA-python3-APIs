@@ -262,9 +262,9 @@ class JSAPHandler:
                 # replace the fake variable with the provided value
                 # according to the type defined in the JSAP file
                 if self.queries[queryName]["forcedBindings"][qfb]["type"].lower() == "uri":
-                    tquery = tquery.replace("?%s" % qfb, " <%s> " % userForcedBindings[qfb])
+                    tquery = tquery.replace("?%s " % qfb, " <%s> " % userForcedBindings[qfb])
                 elif self.queries[queryName]["forcedBindings"][qfb]["type"].lower() == "literal":
-                    tquery = tquery.replace("?%s" % qfb, ' \"%s\" ' % userForcedBindings[qfb])
+                    tquery = tquery.replace("?%s " % qfb, ' "%s" ' % userForcedBindings[qfb])
         
         # build the final update
         return self.getNamespaces() + tquery

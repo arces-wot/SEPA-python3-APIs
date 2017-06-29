@@ -270,7 +270,7 @@ class ConnectionHandler:
 
 
         # configuring the websocket        
-        ws = websocket.WebSocketApp((subscribeURIsec if (secure) else subscribeURI),
+        ws = websocket.WebSocketApp((self.subscribeURIsec if (secure) else self.subscribeURI),
                                     on_message = on_message,
                                     on_error = on_error,
                                     on_close = on_close,

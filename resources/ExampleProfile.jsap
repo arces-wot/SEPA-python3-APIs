@@ -1,32 +1,29 @@
 {
-    "parameters": {
-	"host": "localhost",
-	"port": "8000",
-	"path": "/sparql",
-	"scheme": "http",
-	"secureUpdate":{
-	    "port": 8443,
-	    "scheme": "https"
-	},
-	"secureQuery":{
-	    "port": 8443,
-	    "scheme": "https"
-	},
-	"secureSubscribe":{
-	    "port": 9443,
-	    "scheme": "wss"
-	},
-	"subscribe":{
-	    "port": 9000,
-	    "scheme": "ws"
-	},
-	"authorizationServer":{
-	    "register": "/oauth/register",
-	    "requestToken": "/oauth/token",
-	    "scheme": "https",
-	    "port": 8443
-	}
-    },
+    "parameters":
+    {"host":"localhost",
+     "scheme":"http",
+     "ports": {
+	 "http":8000,
+	 "https":8443,
+	 "ws":9000,
+	 "wss":9443},
+     "paths":{
+	 "query":"/query",
+	 "update":"/update",
+	 "subscribe":"/subscribe",
+	 "register":"/oauth/register",
+	 "tokenRequest":"/oauth/token",
+	 "securePath":"/secure"
+     },
+     "methods":{
+	 "query":"POST",
+	 "update":"URL_ENCODED_POST"
+     },
+     "formats":{
+	 "query":"JSON",
+	 "update":"HTML"
+     }
+    },	
     "updates":{
         "INSERT_AGE": {
 	    "sparql":"INSERT DATA { <http://ns#exampleUser> <http://ns#hasAge> ?age }",

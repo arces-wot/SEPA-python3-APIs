@@ -9,6 +9,6 @@ setup(name='sepy',
       license='GPLv3',
       packages=['sepy'],
       install_requires=[
-          "websocket"
+          "websocket-client"
       ],
       zip_safe=False)

@@ -293,9 +293,10 @@ class JSAPHandler:
                 # replace the fake variable with the provided value
                 # according to the type defined in the JSAP file
                 if self.updates[updateName]["forcedBindings"][ufb]["type"].lower() == "uri":
-                    tupdate = tupdate.replace("?%s" % ufb, " %s " % userForcedBindings[ufb])
+                    self.logger.debug("Replacing " + ufb + " with " + userForcedBindings[ufb])
+                    tupdate = tupdate.replace("?%s " % ufb, " %s " % userForcedBindings[ufb])
                 elif self.updates[updateName]["forcedBindings"][ufb]["type"].lower() == "literal":
-                    tupdate = tupdate.replace("?%s" % ufb, ' \"%s\" ' % userForcedBindings[ufb])
+                    tupdate = tupdate.replace("?%s " % ufb, ' "%s" ' % userForcedBindings[ufb])
         
         # build the final update
         return self.getNamespaces() + tupdate
@@ -313,7 +314,7 @@ class JSAPHandler:
         prefixes = ""
         
         # define a template for a prefix line
-        tprefix = "PREFIX %s: <%s> .\n"
+        tprefix = "PREFIX %s: <%s> "
         
         # iterate over namespaces
         for ns in self.namespaces.keys():        

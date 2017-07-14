@@ -3,7 +3,6 @@
 # global requirements
 
 # local requirements
-from .JSAPHandler import *
 from .Exceptions import *
 from .LowLevelKP import *
 

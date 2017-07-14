@@ -3,7 +3,6 @@
 # global requirements
 
 # local requirements
-from .JSAPHandler import *
 from .Exceptions import *
 from .KP import *
 
@@ -12,12 +11,12 @@ from .KP import *
 class Consumer(KP):
 
     # constructor
-    def __init__(self, sapFile, jparFile):
+    def __init__(self, jsapFile, jparFile):
 
         """Constructor of the Consumer class"""
 
         # call the superclass constructor
-        KP.__init__(self, sapFile, jparFile)
+        KP.__init__(self, jsapFile, jparFile)
 
         # logger
         self.logger.debug("=== Consumer::__init__ invoked ===")
@@ -30,8 +29,11 @@ class Consumer(KP):
         it allows to subscribe to the context broker and bind
         an handler class to the subscription"""
 
+        # logger
+        self.logger.debug("=== Consumer::consume invoked ===")
+
         # get the query from the jsap file
-        query = self.jsap.getQuery(sparqlQuery, forcedBindings)
+        query = self.kp.jsapHandler.getQuery(sparqlQuery, forcedBindings)
 
         # subscribe
         self.kp.subscribe(query, queryAlias, handlerClass(self.kp), secure)        

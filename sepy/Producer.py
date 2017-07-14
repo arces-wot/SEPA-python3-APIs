@@ -3,7 +3,6 @@
 # global requirements
 
 # local requirements
-from .JSAPHandler import *
 from .Exceptions import *
 from .KP import *
 
@@ -14,12 +13,12 @@ class Producer(KP):
     """The Producer. A simple KP implementing only updates"""
 
     # constructor
-    def __init__(self, sapFile, jparFile):
+    def __init__(self, jsapFile, jparFile):
 
         """Constructor for the Producer class"""
 
         # call the superclass constructor
-        KP.__init__(self, sapFile, jparFile)
+        KP.__init__(self, jsapFile, jparFile)
         
         # logger
         self.logger.debug("=== Producer::__init__ invoked ===")
@@ -30,6 +29,11 @@ class Producer(KP):
 
         """The method to update the Knowledge Base"""
 
-        # retrieve and perform the update
-        u = self.jsap.getUpdate(sparqlUpdate, forcedBindings)
+        # logger
+        self.logger.debug("=== Producer::produce invoked ===")
+
+        # retrieve the update 
+        u = self.kp.jsapHandler.getUpdate(sparqlUpdate, forcedBindings)
+
+        # perform the update
         self.kp.update(u, secure) 

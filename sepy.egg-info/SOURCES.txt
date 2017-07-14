@@ -6,7 +6,7 @@ sepy/ConnectionHandler.py
 sepy/Consumer.py
 sepy/Exceptions.py
 sepy/JPARHandler.py
-sepy/JSAPHandler.py
+sepy/JSAPObject.py
 sepy/KP.py
 sepy/LowLevelKP.py
 sepy/Producer.py

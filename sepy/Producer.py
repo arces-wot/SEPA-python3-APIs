@@ -13,12 +13,12 @@ class Producer(KP):
     """The Producer. A simple KP implementing only updates"""
 
     # constructor
-    def __init__(self, jsapFile, jparFile):
+    def __init__(self, jsapFile, jparFile, logLevel):
 
         """Constructor for the Producer class"""
 
         # call the superclass constructor
-        KP.__init__(self, jsapFile, jparFile)
+        KP.__init__(self, jsapFile, jparFile, logLevel)
         
         # logger
         self.logger.debug("=== Producer::__init__ invoked ===")

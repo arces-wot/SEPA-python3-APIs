@@ -22,7 +22,7 @@ class LowLevelKP:
 
         # logger configuration
         self.logger = logging.getLogger("sepaLogger")
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=100)
+        logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
         self.logger.debug("=== KP::__init__ invoked ===")
 
         # load the jpar file

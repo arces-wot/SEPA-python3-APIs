@@ -157,6 +157,9 @@ class JSAPObject:
                 # replace the variable when it is followed by a space
                 jsapSparql = re.sub(r'(\?|\$){1}' + v + r'\s+', value + " ", jsapSparql, flags=0)
 
+                # replace the variable when it is followed by a braket
+                jsapSparql = re.sub(r'(\?|\$){1}' + v + r'\}', value + " } ", jsapSparql, flags=0)
+
                 # replace the variable when it is followed by a dot
                 jsapSparql = re.sub(r'(\?|\$){1}' + v + r'\.', value + " . ", jsapSparql, flags=0)
 

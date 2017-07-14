@@ -5,6 +5,9 @@ import logging
 import json
 import re
 
+# local requirements
+from .Exceptions import *
+
 # the class
 class JSAPObject:
 
@@ -41,7 +44,7 @@ class JSAPObject:
             securePath = self.jsapDict["parameters"]["paths"]["securePath"]
         except KeyError as e:
             self.logger.error("Network configuration incomplete in JSAP file")
-            raise JSAPParsingExcepction from e
+            raise JSAPParsingException from e
 
         # define attributes for secure connection
         self.secureSubscribeUri = "wss://%s:%s%s%s" % (host, wssPort, securePath, subscribePath)
@@ -79,7 +82,7 @@ class JSAPObject:
         # read updates
         self.updates = {}
         try:
-            self.namespaces = self.jsapDict["updates"]
+            self.updates = self.jsapDict["updates"]
         except KeyError:            
             pass
 
@@ -125,23 +128,23 @@ class JSAPObject:
             try:
                 jsapSparql = self.queries[sparqlName]["sparql"]
                 jsapForcedBindings = self.queries[sparqlName]["forcedBindings"]
-            except KeyError:
+            except KeyError as e:
                 self.logger.error("Query not found in JSAP file")
-                raise JSAPParsingExcepction from e
+                raise JSAPParsingException from e
         
         else:
 
             # read the initial update
             try:
                 jsapSparql = self.updates[sparqlName]["sparql"]
-                jsapForcedBidnings = self.updates[sparqlName]["forcedBindings"]
-            except KeyError:
+                jsapForcedBindings = self.updates[sparqlName]["forcedBindings"]
+            except KeyError as e:
                 self.logger.error("Update not found in JSAP file")
-                raise JSAPParsingExcepction from e
+                raise JSAPParsingException from e
         
         # for every forced binding perform a substitution
         for v in forcedBindings.keys():
-
+            
             # check if v is in the jsap forced bindings
             if v in jsapForcedBindings.keys():
             

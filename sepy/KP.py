@@ -15,7 +15,7 @@ class KP:
     Producer, Consumer or Aggregator."""
 
     # constructor
-    def __init__(self, sapFile, jparFile):
+    def __init__(self, jsapFile, jparFile):
 
         """Constructor for the KP class"""
 
@@ -23,8 +23,5 @@ class KP:
         self.logger = logging.getLogger("sepaLogger")
         self.logger.debug("=== KP::__init__ invoked ===")
 
-        # create an instance of the JSAPHandler
-        self.jsap = JSAPHandler(sapFile)
-
         # create an instance of the LowLevel KP
-        self.kp = LowLevelKP(jparFile, self.jsap)
+        self.kp = LowLevelKP(jparFile, jsapFile)

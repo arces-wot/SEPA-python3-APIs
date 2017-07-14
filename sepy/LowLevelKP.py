@@ -6,6 +6,7 @@ import logging
 
 # local requirements
 from .Exceptions import *
+from .JSAPObject import *
 from .JPARHandler import *
 from .ConnectionHandler import *
 
@@ -15,7 +16,7 @@ class LowLevelKP:
     """This is the Low-level class used to develop a KP"""
 
     # constructor
-    def __init__(self, jparFile, jsapHandler = None, logLevel = 10):
+    def __init__(self, jparFile, jsapFile = None, logLevel = 10):
         
         """Constructor for the Low-level KP class"""
 
@@ -27,8 +28,8 @@ class LowLevelKP:
         # load the jpar file
         self.jparHandler = JPARHandler(jparFile)
 
-        # save the jsap handler
-        self.jsapHandler = jsapHandler
+        # load the jsap file
+        self.jsapHandler = JSAPObject(jsapFile)
 
         # initialize data structures
         self.subscriptions = {}

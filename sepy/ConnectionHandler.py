@@ -35,14 +35,14 @@ class ConnectionHandler:
 
         # determine URIs
         if jsapHandler:
-            self.queryURI = jsapHandler.queryURI
-            self.updateURI = jsapHandler.updateURI
-            self.queryURIsec = jsapHandler.queryURIsec
-            self.updateURIsec = jsapHandler.updateURIsec
-            self.subscribeURI = jsapHandler.subscribeURI
-            self.subscribeURIsec = jsapHandler.subscribeURIsec
-            self.registerURI = jsapHandler.registerURI
-            self.getTokenURI = jsapHandler.getTokenURI
+            self.queryURI = jsapHandler.queryUri
+            self.updateURI = jsapHandler.updateUri
+            self.queryURIsec = jsapHandler.secureQueryUri
+            self.updateURIsec = jsapHandler.secureUpdateUri
+            self.subscribeURI = jsapHandler.subscribeUri
+            self.subscribeURIsec = jsapHandler.secureSubscribeUri
+            self.registerURI = jsapHandler.registerUri
+            self.getTokenURI = jsapHandler.tokenReqUri
         else:
             self.queryURI = jparHandler.queryURI
             self.updateURI = jparHandler.updateURI

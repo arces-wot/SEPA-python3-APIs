@@ -31,34 +31,34 @@ class JSAPObject:
 
         # try to read the network configuration
         try:
-            host = self.jsapDict["parameters"]["host"]
-            httpPort = self.jsapDict["parameters"]["ports"]["http"]
-            httpsPort = self.jsapDict["parameters"]["ports"]["https"]
-            wsPort = self.jsapDict["parameters"]["ports"]["ws"]
-            wssPort = self.jsapDict["parameters"]["ports"]["wss"]
-            queryPath = self.jsapDict["parameters"]["paths"]["query"]
-            updatePath = self.jsapDict["parameters"]["paths"]["update"]
-            subscribePath = self.jsapDict["parameters"]["paths"]["subscribe"]
-            registerPath = self.jsapDict["parameters"]["paths"]["register"]
-            tokenRequestPath = self.jsapDict["parameters"]["paths"]["tokenRequest"]
-            securePath = self.jsapDict["parameters"]["paths"]["securePath"]
+            self.host = self.jsapDict["parameters"]["host"]
+            self.httpPort = self.jsapDict["parameters"]["ports"]["http"]
+            self.httpsPort = self.jsapDict["parameters"]["ports"]["https"]
+            self.wsPort = self.jsapDict["parameters"]["ports"]["ws"]
+            self.wssPort = self.jsapDict["parameters"]["ports"]["wss"]
+            self.queryPath = self.jsapDict["parameters"]["paths"]["query"]
+            self.updatePath = self.jsapDict["parameters"]["paths"]["update"]
+            self.subscribePath = self.jsapDict["parameters"]["paths"]["subscribe"]
+            self.registerPath = self.jsapDict["parameters"]["paths"]["register"]
+            self.tokenRequestPath = self.jsapDict["parameters"]["paths"]["tokenRequest"]
+            self.securePath = self.jsapDict["parameters"]["paths"]["securePath"]
         except KeyError as e:
             self.logger.error("Network configuration incomplete in JSAP file")
             raise JSAPParsingException from e
 
         # define attributes for secure connection
-        self.secureSubscribeUri = "wss://%s:%s%s%s" % (host, wssPort, securePath, subscribePath)
-        self.secureUpdateUri = "https://%s:%s%s%s" % (host, httpsPort, securePath, updatePath)
-        self.secureQueryUri = "https://%s:%s%s%s" % (host, httpsPort, securePath, queryPath)
+        self.secureSubscribeUri = "wss://%s:%s%s%s" % (self.host, self.wssPort, self.securePath, self.subscribePath)
+        self.secureUpdateUri = "https://%s:%s%s%s" % (self.host, self.httpsPort, self.securePath, self.updatePath)
+        self.secureQueryUri = "https://%s:%s%s%s" % (self.host, self.httpsPort, self.securePath, self.queryPath)
         
         # define attributes for unsecure connection
-        self.subscribeUri = "ws://%s:%s%s" % (host, wsPort, subscribePath)
-        self.updateUri = "http://%s:%s%s" % (host, httpPort, updatePath)
-        self.queryUri = "http://%s:%s%s" % (host, httpPort, queryPath)
+        self.subscribeUri = "ws://%s:%s%s" % (self.host, self.wsPort, self.subscribePath)
+        self.updateUri = "http://%s:%s%s" % (self.host, self.httpPort, self.updatePath)
+        self.queryUri = "http://%s:%s%s" % (self.host, self.httpPort, self.queryPath)
 
         # define attributes for registration and token request
-        self.tokenReqUri = "https://%s:%s%s" % (host, httpsPort, tokenRequestPath)
-        self.registerUri = "https://%s:%s%s" % (host, httpsPort, registerPath)
+        self.tokenReqUri = "https://%s:%s%s" % (self.host, self.httpsPort, self.tokenRequestPath)
+        self.registerUri = "https://%s:%s%s" % (self.host, self.httpsPort, self.registerPath)
 
         # read namespaces
         self.namespaces = {}

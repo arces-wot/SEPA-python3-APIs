@@ -11,12 +11,12 @@ from .KP import *
 class Consumer(KP):
 
     # constructor
-    def __init__(self, jsapFile, jparFile):
+    def __init__(self, jsapFile, jparFile, logLevel):
 
         """Constructor of the Consumer class"""
 
         # call the superclass constructor
-        KP.__init__(self, jsapFile, jparFile)
+        KP.__init__(self, jsapFile, jparFile, logLevel)
 
         # logger
         self.logger.debug("=== Consumer::__init__ invoked ===")

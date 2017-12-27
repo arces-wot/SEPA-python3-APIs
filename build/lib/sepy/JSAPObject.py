@@ -127,13 +127,9 @@ class JSAPObject:
             # read the initial query
             try:
                 jsapSparql = self.queries[sparqlName]["sparql"]
-            except KeyError as e:
-                self.logger.error("Query not found in JSAP file")
-                raise JSAPParsingException from e
-            try:
                 jsapForcedBindings = self.queries[sparqlName]["forcedBindings"]
             except KeyError as e:
-                self.logger.debug("No forcedBindings for the query {}".format(sparqlName))
+                self.logger.error("Query not found in JSAP file")
                 raise JSAPParsingException from e
         
         else:

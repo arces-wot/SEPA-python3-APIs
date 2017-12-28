@@ -134,7 +134,6 @@ class JSAPObject:
                 jsapForcedBindings = self.queries[sparqlName]["forcedBindings"]
             except KeyError as e:
                 self.logger.debug("No forcedBindings for the query {}".format(sparqlName))
-                raise JSAPParsingException from e
         
         else:
 

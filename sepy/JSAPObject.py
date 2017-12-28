@@ -130,6 +130,7 @@ class JSAPObject:
             except KeyError as e:
                 self.logger.error("Query not found in JSAP file")
                 raise JSAPParsingException from e
+            
             try:
                 jsapForcedBindings = self.queries[sparqlName]["forcedBindings"]
             except KeyError as e:
@@ -153,9 +154,13 @@ class JSAPObject:
             
                 # determine the variable replacement
                 value = forcedBindings[v]
+                valueType = jsapForcedBindings[v]["type"]
+
+                if valueType=="literal":
+                    value = "'{}'".format(value)
 
                 # debug print
-                self.logger.debug("Replacing variable " + v + " with " + value) 
+                self.logger.debug("Replacing {} variable {} with {}".format(valueType,v,value)) 
 
                 # replace the variable when it is followed by a space
                 jsapSparql = re.sub(r'(\?|\$){1}' + v + r'\s+', value + " ", jsapSparql, flags=0)

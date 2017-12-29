@@ -224,16 +224,17 @@ class ConnectionHandler:
 
             elif "ping" in jmessage:                
                 pass # we ignore ping
+
             else:
-                # parsing jmessage
-                added = jmessage["results"]["addedresults"]
-                removed = jmessage["results"]["removedresults"]
+				# parsing jmessage
+                hadded = jmessage["results"]["addedresults"]
+                hremoved = jmessage["results"]["removedresults"]
                 # debug print
-                self.logger.debug("Added bindings: {}".format(added))
-                self.logger.debug("Removed bindings: {}".format(removed))
+                self.logger.debug("Added bindings: {}".format(hadded))
+                self.logger.debug("Removed bindings: {}".format(hremoved))
 
                 # invoke the handler
-                handler.handle(added,removed)
+                handler.handle(hadded,hremoved)
 
 
         # on_error callback

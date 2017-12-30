@@ -158,7 +158,17 @@ class JSAPObject:
 
                 if valueType=="literal":
                     value = "'{}'".format(value)
-
+                else: 
+                    # full uris between <>
+                    namespace_node = False
+                    for ns in self.namespaces:
+                        r = re.compile("{}:.+".format(ns))
+                        if r.match(value) is not None:
+                            namespace_node = True
+                            break
+                    if not namespace_node:
+                        value = "<{}>".format(value)
+                        
                 # debug print
                 self.logger.debug("Replacing {} variable {} with {}".format(valueType,v,value)) 
 

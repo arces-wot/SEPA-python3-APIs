@@ -226,8 +226,8 @@ class ConnectionHandler:
                 pass # we ignore ping
             else:
                 # parsing jmessage
-                added = jmessage["results"]["addedresults"]
-                removed = jmessage["results"]["removedresults"]
+                added = jmessage["results"]["addedresults"]["bindings"]
+                removed = jmessage["results"]["removedresults"]["bindings"]
                 # debug print
                 self.logger.debug("Added bindings: {}".format(added))
                 self.logger.debug("Removed bindings: {}".format(removed))

@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # local import
 from sepy.KP import LowLevelKP
+from sepy.JSAPObject import *
 from sepy.Exceptions import *
 
 # global variables
@@ -32,11 +33,17 @@ class TestEverything(unittest.TestCase):
         
         # debug print
         print(colored("test::setUpClass> ", "blue", attrs=["bold"]) + "Initializing environment")
+
+        # create an instance of the JSAP        
+        cls.jsap = JSAPObject(conf["jsapFile"])
         
         # create an instance of the KP
-        cls.kp = LowLevelKP(conf["host"], conf["queryPath"], conf["registerPath"], conf["tokenPath"], conf["httpPort"], conf["httpsPort"], conf["wsPort"], conf["wssPort"], "TestUser", 110)
-        
+        cls.kp = LowLevelKP(logLevel = 10)
 
+        # create an instance of the secure KP
+        cls.skp = LowLevelKP(jparFile = conf["jparFile"], logLevel = 10)
+        
+        
     ################################################
     #
     # Tests about Registration
@@ -50,7 +57,7 @@ class TestEverything(unittest.TestCase):
 
         success = True
         try:
-            self.kp.connectionManager.register()
+            self.skp.connectionManager.register(self.jsap.registerUri)
         except RegistrationFailedException:
             success = False
         self.assertTrue(success)
@@ -64,7 +71,7 @@ class TestEverything(unittest.TestCase):
         # try a new registation
         exc = False
         try:
-            self.kp.connectionManager.register()
+            self.skp.connectionManager.register(self.jsap.registerUri)
         except RegistrationFailedException:
             exc = True
         self.assertTrue(exc)
@@ -86,7 +93,7 @@ class TestEverything(unittest.TestCase):
         
         # get a token
         try:
-            self.kp.connectionManager.requestToken()
+            self.skp.connectionManager.requestToken(self.jsap.tokenReqUri)
         except TokenRequestFailedException:
             success = False
             
@@ -103,7 +110,7 @@ class TestEverything(unittest.TestCase):
         success = False
         while not(success):
             try:
-                s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+                s1,r1 = self.skp.query(self.jsap.secureQueryUri, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True, self.jsap.registerUri, self.jsap.tokenReqUri)
                 time.sleep(1)
             except TokenExpiredException:
                 success = True
@@ -125,14 +132,14 @@ class TestEverything(unittest.TestCase):
         while True:
             time.sleep(1)
             try:
-                s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+                s1,r1 = self.skp.query(self.jsap.secureQueryUri, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True, self.jsap.registerUri, self.jsap.tokenReqUri)
             except TokenExpiredException:
                 break
                            
         # request a new token
         while True:
             try:
-                self.kp.connectionManager.requestToken()
+                self.skp.connectionManager.requestToken(self.jsap.tokenReqUri)
                 success = True
                 break
             except TokenRequestFailedException:                
@@ -155,11 +162,13 @@ class TestEverything(unittest.TestCase):
 
         # define a random ID and then a triple
         idd = str(uuid.uuid4())    
-        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (conf["ns"], idd,
+                                              conf["ns"], idd,
+                                              conf["ns"], idd)       
 
         # produce a SPARQL UPDATE to insert data and one to delete it
-        s1,r1 = self.kp.update('INSERT DATA {' + triple + '}', False)
-        s2,r2 = self.kp.update('DELETE DATA {' + triple + '}', False)
+        s1,r1 = self.kp.update(self.jsap.updateUri, 'INSERT DATA {' + triple + '}', False)
+        s2,r2 = self.kp.update(self.jsap.updateUri, 'DELETE DATA {' + triple + '}', False)
 
         # verify the result
         self.assertTrue(s1)
@@ -173,20 +182,22 @@ class TestEverything(unittest.TestCase):
 
         # define a random ID and then a triple
         idd = str(uuid.uuid4())    
-        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (conf["ns"], idd,
+                                              conf["ns"], idd,
+                                              conf["ns"], idd)       
 
         # produce a SPARQL UPDATE to insert data and one to delete it
         try:
-            s1,r1 = self.kp.update('INSERT DATA {' + triple + '}', True)
+            s1,r1 = self.skp.update(self.jsap.secureUpdateUri, 'INSERT DATA {' + triple + '}', True, self.jsap.registerUri, self.jsap.tokenReqUri)
         except TokenExpiredException:
             self.kp.connectionManager.requestToken()
-            s1,r1 = self.kp.update('INSERT DATA {' + triple + '}', True)
+            s1,r1 = self.skp.update(self.jsap.secureUpdateUri, 'INSERT DATA {' + triple + '}', True, self.jsap.registerUri, self.jsap.tokenReqUri)
 
         try:
-            s2,r2 = self.kp.update('DELETE DATA {' + triple + '}', True)
+            s2,r2 = self.skp.update(self.jsap.secureUpdateUri, 'DELETE DATA {' + triple + '}', True, self.jsap.registerUri, self.jsap.tokenReqUri)
         except TokenExpiredException:
             self.kp.connectionManager.requestToken()
-            s2,r2 = self.kp.update('DELETE DATA {' + triple + '}', True)
+            s2,r2 = self.skp.update(self.jsap.secureUpdateUri, 'DELETE DATA {' + triple + '}', True, self.jsap.registerUri, self.jsap.tokenReqUri)
 
         # verify the result
         self.assertTrue(s1)
@@ -206,19 +217,21 @@ class TestEverything(unittest.TestCase):
 
         # define a random ID and then a triple
         idd = str(uuid.uuid4())    
-        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (conf["ns"], idd,
+                                              conf["ns"], idd,
+                                              conf["ns"], idd)       
 
         # clear SEPA
-        s,r = self.kp.update('DELETE {?s ?p ?o} WHERE { ?s ?p ?o}', False)
+        s,r = self.kp.update(self.jsap.queryUri, 'DELETE {?s ?p ?o} WHERE { ?s ?p ?o}', False)
 
         # produce a SPARQL UPDATE to insert data 
-        s,r = self.kp.update('INSERT DATA {' + triple + '}', False)
+        s,r = self.kp.update(self.jsap.updateUri, 'INSERT DATA {' + triple + '}', False)
 
         # query data
-        s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", False)
+        s1,r1 = self.kp.query(self.jsap.queryUri, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", False)
 
         # delete data
-        s,r = self.kp.update('DELETE DATA {' + triple + '}', False)
+        s,r = self.kp.update(self.jsap.updateUri, 'DELETE DATA {' + triple + '}', False)
 
         # verify the result
         self.assertTrue(s)
@@ -231,23 +244,25 @@ class TestEverything(unittest.TestCase):
 
         # define a random ID and then a triple
         idd = str(uuid.uuid4())    
-        triple = "<%s:%s> <%s:%s> <%s:%s>" % (ns, idd, ns, idd, ns, idd)       
+        triple = "<%s:%s> <%s:%s> <%s:%s>" % (conf["ns"], idd,
+                                              conf["ns"], idd,
+                                              conf["ns"], idd)       
 
         # clear SEPA
-        s,r = self.kp.update('DELETE {?s ?p ?o} WHERE { ?s ?p ?o}', False)
+        s,r = self.kp.update(self.jsap.updateUri, 'DELETE {?s ?p ?o} WHERE { ?s ?p ?o}', False)
 
         # produce a SPARQL UPDATE to insert data 
-        s,r = self.kp.update('INSERT DATA {' + triple + '}', False)
+        s,r = self.kp.update(self.jsap.updateUri, 'INSERT DATA {' + triple + '}', False)
 
         # query data
         try:
-            s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
-        except TokenExpiredException:
-            self.kp.connectionManager.requestToken()
-            s1,r1 = self.kp.query("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True)
+            s1,r1 = self.skp.query(self.jsap.secureQueryUri, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True, self.jsap.registerUri, self.jsap.tokenReqUri)
+        except TokenExpiredException:                                                                  
+            self.kp.connectionManager.requestToken(self.jsap.tokenReqUri)
+            s1,r1 = self.skp.query(self.jsap.secureQueryUri, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", True, self.jsap.registerUri, self.jsap.tokenReqUri)
 
         # delete data
-        s,r = self.kp.update('DELETE DATA {' + triple + '}', False)
+        s,r = self.kp.update(self.jsap.updateUri, 'DELETE DATA {' + triple + '}', False)
 
         # verify the result
         self.assertTrue(s1)
@@ -267,7 +282,7 @@ class TestEverything(unittest.TestCase):
         success = True
         try:
             global subid
-            subid = self.kp.subscribe("SELECT ?s WHERE { ?s ?p ?o }", "subjects", None, False)
+            subid = self.kp.subscribe(self.jsap.subscribeUri, "SELECT ?s WHERE { ?s ?p ?o }", "subjects", None)
         except:
             success = False
         self.assertTrue(success)
@@ -292,7 +307,7 @@ class TestEverything(unittest.TestCase):
         success = True
         try:
             global subid
-            subid = self.kp.subscribe("SELECT ?s WHERE { ?s ?p ?o }", "subjects", None, True)
+            subid = self.skp.subscribe(self.jsap.secureSubscribeUri, "SELECT ?s WHERE { ?s ?p ?o }", "subjects", None, True, self.jsap.registerUri, self.jsap.tokenReqUri)
         except:
             success = False
         self.assertTrue(success)
@@ -301,38 +316,22 @@ class TestEverything(unittest.TestCase):
     def test_09_secure_unsubscribe(self):
 
         success = True
-        global subid
-        self.kp.unsubscribe(subid, True)
+        try:
+            global subid
+            self.skp.unsubscribe(subid, True)
+        except:
+            success = False
+        self.assertTrue(success)
 
 
 # main
 if __name__ == "__main__":
-    
-    # define conf
-    ns = "http://testNs#"
-    conf = {}
 
-    # define URI parts
-    conf["host"] = "localhost"
-    conf["subPath"] = "/sparql"
-    conf["queryPath"] = "/sparql"
-    conf["updatePath"] = "/sparql"
-    conf["tokenPath"] = "/oauth/token"
-    conf["registerPath"] = "/oauth/register"
-    conf["httpPort"] = 8000
-    conf["httpsPort"] = 8443
-    conf["wsPort"] = 9000
-    conf["wssPort"] = 9443
-    
-    # define URIs
-    conf["updateURI"] = "http://%s:%s/%s" % (conf["host"], conf["httpPort"], conf["updatePath"])
-    conf["updateURIsecure"] = "https://%s:%s/%s" % (conf["host"], conf["httpsPort"], conf["updatePath"])
-    conf["queryURI"] = "http://%s:%s/%s" % (conf["host"], conf["httpPort"], conf["queryPath"])
-    conf["queryURIsecure"] = "https://%s:%s/%s" % (conf["host"], conf["httpsPort"], conf["queryPath"])
-    conf["subscribeURI"] = "ws://%s:%s/%s" % (conf["host"], conf["wsPort"], conf["subPath"])
-    conf["subscribeURI"] = "ws://%s:%s/%s" % (conf["host"], conf["wssPort"], conf["subPath"])
-    conf["tokenURI"] = "https://%s:%s/%s" % (conf["host"], conf["httpsPort"], conf["tokenPath"])
-    conf["registrationURI"] = "https://%s:%s/%s" % (conf["host"], conf["httpsPort"], conf["registerPath"])
+    # init test configuration
+    conf = {}
+    conf["ns"] = "http://testNs#"
+    conf["jsapFile"] = "example.jsap"
+    conf["jparFile"] = "example.jpar"
 
     # run tests
     unittest.main()

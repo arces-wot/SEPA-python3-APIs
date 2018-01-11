@@ -6,8 +6,6 @@ import logging
 
 # local requirements
 from .Exceptions import *
-from .JSAPObject import *
-from .JPARHandler import *
 from .ConnectionHandler import *
 
 # class KP
@@ -16,7 +14,7 @@ class LowLevelKP:
     """This is the Low-level class used to develop a KP"""
 
     # constructor
-    def __init__(self, jparFile, jsapFile = None, logLevel = 10):
+    def __init__(self, jparFile = None, logLevel = 10):
         
         """Constructor for the Low-level KP class"""
 
@@ -25,21 +23,15 @@ class LowLevelKP:
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
         self.logger.debug("=== KP::__init__ invoked ===")
 
-        # load the jpar file
-        self.jparHandler = JPARHandler(jparFile)
-
-        # load the jsap file
-        self.jsapHandler = JSAPObject(jsapFile)
-
         # initialize data structures
         self.subscriptions = {}
 
         # initialize handler
-        self.connectionManager = ConnectionHandler(self.jparHandler, self.jsapHandler)
+        self.connectionManager = ConnectionHandler(jparFile)
 
 
     # update
-    def update(self, sparqlUpdate, secure):
+    def update(self, updateURI, sparqlUpdate, secure = False, tokenURI = None, registerURI = None):
 
         """This method is used to perform a SPARQL update"""
         
@@ -47,7 +39,10 @@ class LowLevelKP:
         self.logger.debug("=== KP::update invoked ===")
 
         # perform the update request
-        status, results = self.connectionManager.request(sparqlUpdate, False, secure)                
+        if secure:
+            status, results = self.connectionManager.secureRequest(updateURI, sparqlUpdate, False, tokenURI, registerURI)
+        else:
+            status, results = self.connectionManager.unsecureRequest(updateURI, sparqlUpdate, False)
 
         # return
         if int(status) == 200:
@@ -57,7 +52,7 @@ class LowLevelKP:
 
 
     # query
-    def query(self, sparqlQuery, secure):
+    def query(self, queryURI, sparqlQuery, secure = False, tokenURI = None, registerURI = None):
 
         """This method is used to perform a SPARQL query"""
 
@@ -65,8 +60,11 @@ class LowLevelKP:
         self.logger.debug("=== KP::query invoked ===")
         
         # perform the query request
-        status, results = self.connectionManager.request(sparqlQuery, True, secure)
-        
+        if secure:
+            status, results = self.connectionManager.secureRequest(queryURI, sparqlQuery, True, tokenURI, registerURI)
+        else:
+            status, results = self.connectionManager.unsecureRequest(queryURI, sparqlQuery, True)
+            
         # return 
         if int(status) == 200:
             jresults = json.loads(results)
@@ -79,13 +77,18 @@ class LowLevelKP:
         
 
     # susbscribe
-    def subscribe(self, sparql, alias, handler, secure):
+    def subscribe(self, subscribeURI, sparql, alias, handler, secure = False, registerURI = None, tokenURI = None):
 
         # debug print
         self.logger.debug("=== KP::subscribe invoked ===")
       
         # start the subscription and return the ID
-        subid = self.connectionManager.openWebsocket(sparql, alias, handler, secure)
+        subid = None
+        if secure:
+            print("HERE")
+            subid = self.connectionManager.openSecureWebsocket(subscribeURI, sparql, alias, handler, registerURI, tokenURI)
+        else:
+            subid = self.connectionManager.openUnsecureWebsocket(subscribeURI, sparql, alias, handler)
         return subid
         
     

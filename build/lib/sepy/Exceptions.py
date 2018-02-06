@@ -14,3 +14,6 @@ class JSAPParsingException(Exception):
 
 class JPARParsingException(Exception):
     pass
+
+class MissingJPARException(Exception):
+    pass

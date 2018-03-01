@@ -37,7 +37,7 @@ Then the query, update, subscribe and unsubscribe methods are available.
 
 ### Query and Update
 
-These two methods (`query` and `update`) expect a SPARQL query/update and a boolean specifying whether security mechanisms should be used or not. When a new query/udpate is issued, it may be preferrable to catch the `RegistrationFailedExceptions`, `TokenExpiredException` and `TokenRequestFailedException`errors.
+These two methods (`query` and `update`) expect a SPARQL query/update and a boolean specifying whether security mechanisms should be used or not. When a new query/update is issued, it may be preferrable to catch the `RegistrationFailedExceptions`, `TokenExpiredException` and `TokenRequestFailedException`errors.
 
 ### Subscribe and Unsubscribe
 

@@ -13,12 +13,13 @@ class JSAPObject:
 
     """A class to handle JSAP files"""
 
-    def __init__(self, jsapFile):
+    def __init__(self, jsapFile, logLevel = 10):
 
         """Constructor of the JSAPObject class"""
 
         # logger
         self.logger = logging.getLogger("sepaLogger")
+        logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
         self.logger.debug("=== JSAPObject::__init__ invoked ===")
 
         # try to open JSAP File

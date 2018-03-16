@@ -20,6 +20,7 @@ class JSAPObject:
         # logger
         self.logger = logging.getLogger("sepaLogger")
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
+        self.logger.setLevel(logLevel)
         self.logger.debug("=== JSAPObject::__init__ invoked ===")
 
         # try to open JSAP File

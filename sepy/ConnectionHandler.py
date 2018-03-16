@@ -22,13 +22,16 @@ class ConnectionHandler:
     """This is the ConnectionHandler class"""
 
     # constructor
-    def __init__(self, jpar = None):
+    def __init__(self, jpar = None, logLevel = 10):
         
         """Constructor of the ConnectionHandler class"""
 
         # logger configuration
         self.logger = logging.getLogger("sepaLogger")
+        self.logger.setLevel(logLevel)
         self.logger.debug("=== ConnectionHandler::__init__ invoked ===")
+        logging.getLogger("urllib3").setLevel(logLevel)
+        logging.getLogger("requests").setLevel(logLevel)
 
         # jpar
         self.jpar = jpar

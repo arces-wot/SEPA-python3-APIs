@@ -20,6 +20,7 @@ class LowLevelKP:
 
         # logger configuration
         self.logger = logging.getLogger("sepaLogger")
+        self.logger.setLevel(logLevel)
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
         self.logger.debug("=== KP::__init__ invoked ===")
 
@@ -27,7 +28,7 @@ class LowLevelKP:
         self.subscriptions = {}
 
         # initialize handler
-        self.connectionManager = ConnectionHandler(jparFile)
+        self.connectionManager = ConnectionHandler(jparFile, logLevel)
 
 
     # update

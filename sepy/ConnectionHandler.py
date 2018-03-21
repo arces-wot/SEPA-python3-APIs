@@ -210,6 +210,10 @@ class ConnectionHandler:
                 # save the subscription id and the thread
                 self.websockets[subid] = ws
 
+                # invoke the handler
+                added = jmessage["firstResults"]["results"]["bindings"]
+                handler.handle(added, [])
+
             elif "ping" in jmessage:                
                 pass # we ignore ping
             else:
@@ -318,6 +322,10 @@ class ConnectionHandler:
 
                 # save the subscription id and the thread
                 self.websockets[subid] = ws
+
+                # invoke the handler
+                added = jmessage["firstResults"]["results"]["bindings"]
+                handler.handle(added, [])
 
             elif "ping" in jmessage:                
                 pass # we ignore ping

@@ -53,14 +53,14 @@ class ConnectionHandler:
         self.logger.debug("=== ConnectionHandler::unsecureRequest invoked ===")
 
         # perform the request
+        headers = {"Accept":"application/json"}
         if isQuery:
-            headers = {"Content-Type":"application/sparql-query", "Accept":"application/json"}
-            r = requests.post(reqURI, headers = headers, data = sparql)
-            r.connection.close()
+            headers["Content-Type"] = "application/sparql-query"
         else:
-            headers = {"Content-Type":"application/sparql-update", "Accept":"application/json"}
-            r = requests.post(reqURI, headers = headers, data = sparql)
-            r.connection.close()
+            headers["Content-Type"] = "application/sparql-update"
+
+        r = requests.post(reqURI, headers = headers, data = sparql.encode("utf-8"))
+        r.connection.close()
         return r.status_code, r.text
 
 

@@ -1,21 +1,76 @@
 #!/usr/bin/python3
 
-# global requirements
+from .Exceptions import *
 import logging
 import json
 import re
 
-# local requirements
-from .Exceptions import *
 
-# the class
 class JSAPObject:
 
-    """A class to handle JSAP files"""
+    """
+    A class to handle JSAP files
+
+    Parameters
+    ----------
+    jsapFile : str
+        The name (with relative or absolute path) of the JSAP file
+    logLevel : int
+        The desired level of debugging information (default = 40)
+    
+    Attributes
+    ----------
+    jsap : dict
+        The full dictionary with the JSAP content
+    namespaces : dict
+        Dictionary with prefixes (keys) and namespaces (values)
+    queries : dict
+        Dictionary with SPARQL query templates (values) indexed by a friendly name (key)
+    updates : dict
+        Dictionary with SPARQL update templates (values) indexed by a friendly name (key)
+    updateURI : str
+        The URI to perform SPARQL updates
+    queryURI : str
+        The URI to perform SPARQL queries
+    subscribeURI : str
+        The URI to perform SPARQL subscriptions
+    host : str
+        The hostname of the SEPA instance
+    httpPort : int
+        The port number for unsecure HTTP connection
+    httpsPort : int
+        The port number for secure HTTP connection
+    wsPort : int
+        The port number for unsecure Websocket connection
+    wssPort : int
+        The port number for secure Websocket connection
+    queryPath : str
+        The path to the query resource of the SEPA instance
+    updatePath : str
+        The path to the update resource of the SEPA instance
+    subscribePath : str
+        The path to the subscribe resource of the SEPA instance
+    registerPath : str
+        The path to register to the SEPA instance
+    tokenRequestPath : str
+        The path to request a token for secure connections to the SEPA instance
+    securePath : str
+        The path to compose URIs for secure connections to SEPA
+    """
 
     def __init__(self, jsapFile, logLevel = 10):
 
-        """Constructor of the JSAPObject class"""
+        """
+        Constructor of the JSAPObject class
+
+        Parameters
+        ----------
+        jsapFile : str
+            The name (with relative or absolute path) of the JSAP file
+        logLevel : int
+            The desired level of debugging information (default = 40)
+    
+        """
 
         # logger
         self.logger = logging.getLogger("sepaLogger")
@@ -29,7 +84,7 @@ class JSAPObject:
                 self.jsapDict = json.load(jsapFileStream)
         except Exception as e:
             self.logger.error("Parsing of the JSAP file failed")
-            raise JSAPParsingException from e        
+            raise JSAPParsingException("Parsing of the JSAP file failed")        
 
         # try to read the network configuration
         try:
@@ -46,7 +101,7 @@ class JSAPObject:
             self.securePath = self.jsapDict["parameters"]["paths"]["securePath"]
         except KeyError as e:
             self.logger.error("Network configuration incomplete in JSAP file")
-            raise JSAPParsingException from e
+            raise JSAPParsingException("Network configuration incomplete in JSAP file")
 
         # define attributes for secure connection
         self.secureSubscribeUri = "wss://%s:%s%s%s" % (self.host, self.wssPort, self.securePath, self.subscribePath)
@@ -66,8 +121,8 @@ class JSAPObject:
         self.namespaces = {}
         try:
             self.namespaces = self.jsapDict["namespaces"]
-        except KeyError:            
-            pass
+        except Exception as e:            
+            raise JSAPParsingException("Error while reading namespaces of the JSAP file")
 
         # define namespace sparql string
         self.nsSparql = ""
@@ -78,20 +133,36 @@ class JSAPObject:
         self.queries = {}
         try:
             self.queries = self.jsapDict["queries"]
-        except KeyError:            
-            pass
+        except Exception as e:            
+            raise JSAPParsingException("Error while reading queries of the JSAP file")
 
         # read updates
         self.updates = {}
         try:
             self.updates = self.jsapDict["updates"]
-        except KeyError:            
-            pass
+        except Exception as e:            
+            raise JSAPParsingException("Error while reading updates of the JSAP file")
 
 
     def getQuery(self, queryName, forcedBindings):
 
-        """Method used to get the final query text"""
+        """
+        Returns a SPARQL query retrieved from the YSAP and
+        modified with the forced bindings provided by the user.
+
+        Parameters
+        ----------
+        queryName : str
+            The friendly name of the SPARQL Query
+        forcedBindings : Dict
+            The dictionary containing the bindings to fill the template
+
+        Returns
+        -------
+        str
+            The complete SPARQL Query
+       
+        """
 
         # debug print
         self.logger.debug("=== JSAPObject::getQuery invoked ===")
@@ -102,7 +173,23 @@ class JSAPObject:
 
     def getUpdate(self, updateName, forcedBindings):
 
-        """Method used to get the final update text"""
+        """
+        Returns a SPARQL update retrieved from the YSAP and
+        modified with the forced bindings provided by the user.
+
+        Parameters
+        ----------
+        updateName : str
+            The friendly name of the SPARQL Update
+        forcedBindings : Dict
+            The dictionary containing the bindings to fill the template
+
+        Returns
+        -------
+        str
+            The complete SPARQL Update
+       
+        """
 
         # debug print
         self.logger.debug("=== JSAPObject::getUpdate invoked ===")
@@ -112,9 +199,26 @@ class JSAPObject:
 
 
     def getSparql(self, isQuery, sparqlName, forcedBindings):
+        
+        """
+        Returns a SPARQL query/update retrieved from the YSAP and 
+        modified with the forced bindings provided by the user.
 
-        """Retrieves a sparql query or update and substitutes
-        the forced bindings to get the final sparql code"""
+        Parameters
+        ----------
+        isQuery : bool
+            A variable to specify if looking for a query or an update
+        sparqlName : str
+            The friendly name of the SPARQL Update
+        forcedBindings : Dict
+            The dictionary containing the bindings to fill the template
+
+        Returns
+        -------
+        str
+            The complete SPARQL Query or Update
+        
+        """
 
         # debug print
         self.logger.debug("=== JSAPObject::getSparql invoked ===")
@@ -131,7 +235,7 @@ class JSAPObject:
                 jsapSparql = self.queries[sparqlName]["sparql"]
             except KeyError as e:
                 self.logger.error("Query not found in JSAP file")
-                raise JSAPParsingException from e
+                raise JSAPParsingException("Query not found in JSAP file")
             
             try:
                 jsapForcedBindings = self.queries[sparqlName]["forcedBindings"]
@@ -146,7 +250,7 @@ class JSAPObject:
                 jsapForcedBindings = self.updates[sparqlName]["forcedBindings"]
             except KeyError as e:
                 self.logger.error("Update not found in JSAP file")
-                raise JSAPParsingException from e
+                raise JSAPParsingException("Update not found in JSAP file")
         
         # for every forced binding perform a substitution
         for v in forcedBindings.keys():

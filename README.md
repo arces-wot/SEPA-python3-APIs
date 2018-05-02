@@ -46,4 +46,8 @@ Yes, (almost) all the code is documented through pydoc, so if you want, you can 
 pydoc sepy.YSAPObject
 ```
 
+## Foreseen changes
+
+I will update tests and I will modify YSAPObject class in order to automatically add prefixes to queries/updates!
+
 Stay Tuned!

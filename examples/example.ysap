@@ -47,12 +47,22 @@ updates:
                ?actionDataSchema rdf:type xsd:String .               
              }"
     forcedBindings:
-      thingDesc: "uri"
-      actionURI: "uri"
-      actionName: "literal"
-      actionComment: "literal"
-      actionDataSchema: "uri"
-
+      thingDesc:
+	type: "uri"
+	value: ""
+      actionURI:
+	type: "uri"
+      	value: ""	
+      actionName:
+	type: "literal"
+	value: ""
+      actionComment:
+	type: "literal"
+	value: ""
+      actionDataSchema:
+	type: "uri"
+	value: ""
+      		
 queries:
 
   ACTION_REQUESTS:

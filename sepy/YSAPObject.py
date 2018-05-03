@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import re
 import yaml
 import logging
 from .Exceptions import *
@@ -93,7 +94,7 @@ class YSAPObject:
         try:
             self.queries = {}
             for q in self.ysap["queries"]:
-                self.queries[q] = self.ysap["queries"]["sparql"]                
+                self.queries[q] = self.ysap["queries"][q]["sparql"]                
         except Exception as e:
             raise YSAPParsingException("Error with queries configuration")
             
@@ -101,8 +102,8 @@ class YSAPObject:
         self.logger.debug("Reading updates")
         try:
             self.updates = {}
-            for q in self.ysap["updates"]:
-                self.updates[q] = self.ysap["updates"]["sparql"]                
+            for u in self.ysap["updates"]:
+                self.updates[u] = self.ysap["updates"][u]["sparql"]                
         except Exception as e:
             raise YSAPParsingException("Error with updates configuration")
         
@@ -128,7 +129,7 @@ class YSAPObject:
         """
 
         self.logger.debug("Retrieving SPARQL Update %s" % uName)
-        return getSPARQL(uName, forcedBindings, False)
+        return self.getSPARQL(uName, forcedBindings, False)
 
     
     def getQuery(self, qName, forcedBindings):
@@ -152,7 +153,7 @@ class YSAPObject:
         """
 
         self.logger.debug("Retrieving SPARQL Query %s" % uName)
-        return getSPARQL(uName, forcedBindings, True)
+        return self.getSPARQL(uName, forcedBindings, True)
 
     
     def getSPARQL(self, name, forcedBindings, isQuery):

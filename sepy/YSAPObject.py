@@ -152,8 +152,8 @@ class YSAPObject:
        
         """
 
-        self.logger.debug("Retrieving SPARQL Query %s" % uName)
-        return self.getSPARQL(uName, forcedBindings, True)
+        self.logger.debug("Retrieving SPARQL Query %s" % qName)
+        return self.getSPARQL(qName, forcedBindings, True)
 
     
     def getSPARQL(self, name, forcedBindings, isQuery):

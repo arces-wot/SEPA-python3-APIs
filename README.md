@@ -1,7 +1,7 @@
 # SEPA-python3-APIs
 Client-side libraries for the SEPA platform (Python3)
 
-## Installation
+## Installation and usage
 
 Go to the folder named `dist`, uncompress the archive using `tar`, then type the usual:
 
@@ -13,18 +13,50 @@ and
 
 (this one as root).
 
+To use the classes you have to import them in this way:
+
+```
+from sepy.<the class you want to import> import *
+```
+
+For example, if you want to import the JSAPObject (used to handle JSAP files) you have to write:
+
+```python
+from sepy.JSAPObject import *
+```
+
+This library consists of 6 classes that can be used for different purposes:
+
+- JPARHandler: An handler class for JPAR files
+- JSAPObject: An handler class for JSAP files
+- YSAPObject: An handler class for YSAP files
+- SEPAClient: A low-level class used to develop a client for SEPA
+- ConnectionHandler: A class for connection handling
+
+Let's talk about some classes deeply:
 
 ## SEPAClient
 
 These APIs allows to develop a client for the SEPA platform using a simple interface. First of all the class SEPAClient must be initialized. Then the standard methods to interact with the broker are available.
+
+### Parameters:
+- jparFile :
+  A string indicating the name with relative/full path of the JPAR file used to exploit the security mechanism. Default = None
+- logLevel :
+  A number indicating the desired log level. Default = 40
+The parameters are optional. They activate query, update, subscribe, unsubscribe methods.
+
+### Attributes:
+- subscriptions :
+  A dictionary to keep track of the active subscriptions
+- connectionManager :
+  The underlying responsible for network connections
 
 ### Creating a SEPAClient
 
 ```python
 sc = SEPAClient()
 ```
-
-(optional parameters are the path for a JPAR file to exploit security mechanisms or the log level that defaults to 40). Then the query, update, subscribe and unsubscribe methods are available. 
 
 ### Query and Update
 
@@ -40,10 +72,10 @@ This package supports both Semantic Application Profiles encoded with YAML or JS
 
 ## Something else?
 
-Yes, (almost) all the code is documented through pydoc, so if you want, you can get the full documentation of attributes and methods. For example with:
+Yes, (almost) all the code is documented through pydoc, so if you want, you can get the full documentation of attributes and methods. For example from prompt write:
 
 ```
-pydoc sepy.YSAPObject
+python -m pydoc sepy.YSAPObject
 ```
 
 ## Foreseen changes

@@ -8,7 +8,6 @@ sepy/JSAPObject.py
 sepy/SEPAClient.py
 sepy/YSAPObject.py
 sepy/__init__.py
-sepy/test.py
 sepy.egg-info/PKG-INFO
 sepy.egg-info/SOURCES.txt
 sepy.egg-info/dependency_links.txt

@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: sepy
-Version: 0.1
+Version: 0.2
 Summary:  Client-side libraries for the SEPA platform (Python3) 
 Home-page: https://github.com/arces-wot/SEPA-python3-APIs
 Author: Fabio Viola

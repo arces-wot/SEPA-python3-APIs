@@ -28,7 +28,7 @@ class SEPAClient:
     """
 
     # constructor
-    def __init__(self, jparFile = None, logLevel = 40):
+    def __init__(self, jparFile = None, logLevel = 40, lastSEPA = False):
         
         """
         Constructor for the Low-level KP class
@@ -52,7 +52,7 @@ class SEPAClient:
         self.subscriptions = {}
 
         # initialize handler
-        self.connectionManager = ConnectionHandler(jparFile, logLevel)
+        self.connectionManager = ConnectionHandler(jparFile, logLevel, lastSEPA)
 
 
     # update

@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='sepy',
-      version='0.1',
+      version='0.2',
       description=' Client-side libraries for the SEPA platform (Python3) ',
       url='https://github.com/arces-wot/SEPA-python3-APIs',
       author='Fabio Viola',

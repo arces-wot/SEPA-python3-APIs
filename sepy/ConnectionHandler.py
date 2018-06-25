@@ -22,7 +22,7 @@ class ConnectionHandler:
     """This is the ConnectionHandler class"""
 
     # constructor
-    def __init__(self, jpar = None, logLevel = 10):
+    def __init__(self, jpar = None, logLevel = 10, lastSEPA = False):
         
         """Constructor of the ConnectionHandler class"""
 
@@ -39,6 +39,9 @@ class ConnectionHandler:
             self.jparHandler = JPARHandler(jpar)
         else:
             self.jparHandler = None
+
+        # last sepa?
+        self.lastSEPA = lastSEPA
             
         # open subscriptions
         self.websockets = {}
@@ -53,14 +56,14 @@ class ConnectionHandler:
         self.logger.debug("=== ConnectionHandler::unsecureRequest invoked ===")
 
         # perform the request
-        headers = {"Accept":"application/json"}
         if isQuery:
-            headers["Content-Type"] = "application/sparql-query"
+            headers = {"Content-Type":"application/sparql-query", "Accept":"application/json"}
+            r = requests.post(reqURI, headers = headers, data = sparql)
+            r.connection.close()
         else:
-            headers["Content-Type"] = "application/sparql-update"
-
-        r = requests.post(reqURI, headers = headers, data = sparql.encode("utf-8"))
-        r.connection.close()
+            headers = {"Content-Type":"application/sparql-update", "Accept":"application/json"}
+            r = requests.post(reqURI, headers = headers, data = sparql.encode("utf-8"))
+            r.connection.close()
         return r.status_code, r.text
 
 
@@ -197,7 +200,7 @@ class ConnectionHandler:
             # debug
             self.logger.debug("=== ConnectionHandler::on_message invoked ===")
             self.logger.debug(message)
-
+            
             # process message
             jmessage = json.loads(message)
             if "subscribed" in jmessage:
@@ -210,16 +213,28 @@ class ConnectionHandler:
                 # save the subscription id and the thread
                 self.websockets[subid] = ws
 
-                # invoke the handler
-                added = jmessage["firstResults"]["results"]["bindings"]
-                handler.handle(added, [])
+                if not self.lastSEPA:
+
+                    # invoke the handler
+                    added = jmessage["firstResults"]["results"]["bindings"]
+                    handler.handle(added, [])
 
             elif "ping" in jmessage:                
                 pass # we ignore ping
             else:
-                # parsing jmessage
-                added = jmessage["results"]["addedresults"]["bindings"]
-                removed = jmessage["results"]["removedresults"]["bindings"]
+
+                if not self.lastSEPA:
+                
+                    # parsing jmessage
+                    added = jmessage["results"]["addedresults"]["bindings"]
+                    removed = jmessage["results"]["removedresults"]["bindings"]
+
+                else:
+
+                    # parsing jmessage
+                    added = jmessage["results"]["addedResults"]["bindings"]
+                    removed = jmessage["results"]["removedResults"]["bindings"]
+                    
                 # debug print
                 self.logger.debug("Added bindings: {}".format(added))
                 self.logger.debug("Removed bindings: {}".format(removed))

@@ -46,11 +46,12 @@ def main(args):
             logging.warning("Error while parsing prefixes, skipping...")
     
     # loads the json from a file, or tries from the command line argument
-    if os.path.isfile(args["file"]):
+    if os.path.isfile(str(args["file"])):
         with open(args["file"],"r") as bz_output:
             json_output = json.load(bz_output)
     else:
-        json_output = json.loads(input())
+        print(args["file"])
+        json_output = json.loads(json.dumps(args["file"]))
     
     # setup the table which will be given in output
     variables = json_output["head"]["vars"]

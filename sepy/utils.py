@@ -26,6 +26,7 @@ import json
 import logging
 import os
 from .tablaze import tablify
+from .YSparqlObject import YSparqlObject
 
 logger = logging.getLogger("sepaLogger")
 
@@ -65,7 +66,7 @@ def diff_JsonQuery(jA,jB,ignore_val=[],show_diff=False,log_message=""):
         jdiff["head"]={"vars": jA["head"]["vars"]}
         jdiff["results"]={"bindings": diff}
         logger.info("{} Differences".format(log_message))
-        tablify(json.dumps(jdiff))
+        tablify(jdiff)
     return result
 
 def compare_queries(i_jA,i_jB,show_diff=False,ignore_val=[]):
@@ -109,3 +110,83 @@ def compare_queries(i_jA,i_jB,show_diff=False,ignore_val=[]):
     # B->A
     result = result and diff_JsonQuery(jB,jA,show_diff=show_diff,ignore_val=ignore_val,log_message="B->A")
     return result
+    
+def notify_result(name,result):
+    """
+    This function just logs a result in the form
+    {name} - {result}
+    where name is a string, and result a boolean.
+    result is also forwarded to the caller.
+    """
+    logger.setLevel(logging.INFO)
+    if result:
+        logger.info("{} - {}".format(name,result))
+    else:
+        logger.error("{} - {}".format(name,result))
+    return result
+    
+def query_CompareUpdate(graph,
+                        query_path,
+                        fBindings,
+                        reset,
+                        update_path,
+                        log_message="",
+                        replace={},
+                        ignore=[],
+                        prefixes=""):
+    """
+    If reset is true, we perform the query available into 'query_path' to 'graph' with the
+    forced bindings in 'fBindings'.
+    The sparql obtained is elaborated replacing keys with indexes available in 'replace'.
+    We redirect the output of the query towards 'update_path'.
+    
+    If reset is false, we make the substitution and the query. Then we compare the 
+    query output to the file into 'update_path', ignoring the actual value of the 
+    bindings in 'ignore' and outputting the message in 'log_message'.
+    """
+    sparql,fB = YSparqlObject(query_path,external_prefixes=prefixes).getData(fB_values=fBindings)
+    for key in replace:
+        sparql = sparql.replace(key,replace[key])
+    if reset:
+        logging.warning("Rebuilding "+update_path)
+        return bool(graph.query(sparql,fB=fB,destination=update_path))
+    else:
+        return query_FileCompare(   graph,
+                                    sparql=sparql,
+                                    fB=fB,
+                                    message=log_message,
+                                    fileAddress=update_path,
+                                    ignore_val=ignore)
+
+
+def query_FileCompare(  graph,
+                        sparql="select * where {?a ?b ?c}",
+                        fB={},
+                        message="query_all",
+                        fileAddress="",
+                        show_diff=False,
+                        ignore_val=[]):
+    """
+    This function performs a 'sparql' query to 'graph', then calls for comparison 
+    with the content of 'fileAddress'.
+    You can ignore differences in bindings into the 'ignore_val' parameter.
+    Then, it notifies the result using the tag contained in 'message' parameter.
+    The default behaviour is SELECT * WHERE {?a ?b ?c}.
+    'show_diff' parameter will call tablaze.py to print differences to stdout.
+    """
+    with open(fileAddress,"r") as result:
+        template = json.load(result)
+    result = graph.query(sparql,fB)
+    message = "{} ({} bindings)".format(message,len(result["results"]["bindings"]))
+    
+    return notify_result(   message,
+                            compare_queries(template,
+                                            result,
+                                            show_diff=show_diff,
+                                            ignore_val=ignore_val))
+
+def uriFormat(uri):
+    """
+    TODO - Still naive uri detection
+    """
+    return "<"+uri+">" if "//" in uri else uri

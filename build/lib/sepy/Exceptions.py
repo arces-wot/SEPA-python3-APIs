@@ -17,3 +17,6 @@ class JPARParsingException(Exception):
 
 class MissingJPARException(Exception):
     pass
+
+class YSAPParsingException(Exception):
+    pass

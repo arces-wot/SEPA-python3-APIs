@@ -25,13 +25,19 @@ For example, if you want to import the JSAPObject (used to handle JSAP files) yo
 from sepy.JSAPObject import *
 ```
 
-This library consists of 6 classes that can be used for different purposes:
+This library consists of 11 modules that can be used for different purposes:
 
 - JPARHandler: An handler class for JPAR files
 - JSAPObject: An handler class for JSAP files
 - YSAPObject: An handler class for YSAP files
 - SEPAClient: A low-level class used to develop a client for SEPA
 - ConnectionHandler: A class for connection handling
+- Exceptions
+- YSparqlObject: A class dealing with the yaml description of SPARQL
+- utils: Some methods useful in plenty of situations when dealing with SEPA results
+- tablaze: A runnable script (also callable as a function, to nicely print SEPA output)
+- SubscriptionHandler: A basic handler to use subscriptions with SEPA
+- Sepa: The higher-level class corresponding to SEPAClient
 
 Let's talk about some classes deeply:
 

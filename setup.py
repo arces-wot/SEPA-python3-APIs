@@ -9,6 +9,9 @@ setup(name='sepy',
       license='GPLv3',
       packages=['sepy'],
       install_requires=[
-          "websocket-client"
+          "websocket-client",
+          "argparse",
+          "prettytable",
+          "pyyaml"
       ],
       zip_safe=False)

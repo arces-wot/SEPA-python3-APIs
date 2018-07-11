@@ -26,31 +26,42 @@ import argparse
 import prettytable
 import json
 import re
-import os
 import logging
 
-def tablify(input_json,prefix_file=""):
+def tablify(input_json,prefix_file=None):
+    """
+    This is the method to call when you import tablaze and
+    don't use it as a stand alone script.
+    input_json can be given as
+        - path to json file to be rendere
+        - string with the json itself
+    prefix_file is not compulsory, and you can give it as
+        - path to file containing prefix strings from sparql
+        - list of prefix strings
+    """
     main({"prefixes": prefix_file, "file": input_json})
 
 def main(args):
     # builds prefix dictionary
     prefixes = {}
-    if args["prefixes"] != "":
+    if args["prefixes"] is not None:
         try:
+            # this is when args["prefixes"] is a path to file
             with open(args["prefixes"],"r") as prefix_file:
                 lines = prefix_file.readlines()
-            for line in lines:
-                m = re.match(r"prefix ([a-zA-Z]+): <(.+)>",line)
-                prefixes[m.groups()[0]] = m.groups()[1]
         except:
-            logging.warning("Error while parsing prefixes, skipping...")
+            # this is when it's a list of strings
+            lines = args["prefixes"]
+        for line in lines:
+            # here we parse the prefixes
+            m = re.match(r"prefix ([a-zA-Z]+): <(.+)>",line)
+            prefixes[m.groups()[0]] = m.groups()[1]
     
     # loads the json from a file, or tries from the command line argument
-    if os.path.isfile(str(args["file"])):
+    try:
         with open(args["file"],"r") as bz_output:
             json_output = json.load(bz_output)
-    else:
-        print(args["file"])
+    except:
         json_output = json.loads(json.dumps(args["file"]))
     
     # setup the table which will be given in output

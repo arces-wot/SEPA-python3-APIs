@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin python3
 # -*- coding: utf-8 -*-
 #
 #  tablaze.py
@@ -19,14 +19,16 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
+#    _        _     _               
+#   | |_ __ _| |__ | | __ _ _______ 
+#   | __/ _` | '_ \| |/ _` |_  / _ \
+#   | || (_| | |_) | | (_| |/ /  __/
+#    \__\__,_|_.__/|_|\__,_/___\___|
+#
 
-import argparse
 import prettytable
 import json
 import re
-import logging
 
 def tablify(input_json,prefix_file=None):
     """

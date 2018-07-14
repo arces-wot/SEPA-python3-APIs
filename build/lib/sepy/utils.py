@@ -116,7 +116,7 @@ def notify_result(name,result):
     This function just logs a result in the form
     {name} - {result}
     where name is a string, and result a boolean.
-    result is also forwarded to the caller.
+    Returns result (True or False) to the caller.
     """
     logger.setLevel(logging.INFO)
     if result:
@@ -143,6 +143,7 @@ def query_CompareUpdate(graph,
     If reset is false, we make the substitution and the query. Then we compare the 
     query output to the file into 'update_path', ignoring the actual value of the 
     bindings in 'ignore' and outputting the message in 'log_message'.
+    Returns True or False according to check result.
     """
     sparql,fB = YSparqlObject(query_path,external_prefixes=prefixes).getData(fB_values=fBindings)
     for key in replace:
@@ -173,6 +174,7 @@ def query_FileCompare(  graph,
     Then, it notifies the result using the tag contained in 'message' parameter.
     The default behaviour is SELECT * WHERE {?a ?b ?c}.
     'show_diff' parameter will call tablaze.py to print differences to stdout.
+    Returns True or False according to check result.
     """
     with open(fileAddress,"r") as result:
         template = json.load(result)

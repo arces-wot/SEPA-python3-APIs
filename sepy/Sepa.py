@@ -151,7 +151,7 @@ class Sepa:
         Performs a subscription with the sparql and its forcedBindings;
         Use YSparqlObject to fill the sparql and fB fields.
         You can give an 'alias' to the subscription, as well as an handler. 
-        If you don't give the handler, the default one will be used.
+        If you don't give the handler, the default null one will be used.
         The subscription id is returned.
         """
         protocol = "wss" if self.isSecure() else "ws"

@@ -167,7 +167,7 @@ class Sepa:
         """
         Given the subid, it closes the subscription.
         """
-        self._client.unsubscribe(subid,self._securtity["secure"])
+        self._client.unsubscribe(subid,self._security["secure"])
         
     def clear(self):
         """

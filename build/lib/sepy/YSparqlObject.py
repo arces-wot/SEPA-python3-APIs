@@ -34,8 +34,21 @@ class YSparqlObject:
         sparql = self._external_prefixes + yaml_raw[yaml_root]["sparql"]
         fB = yaml_raw[yaml_root]["forcedBindings"]
         # forcing bindings available in fB_values
+        checkBindings(fB_values,fB)
         for binding in fB_values.keys():
             if binding in fB:
                 fB[binding]["value"] = fB_values[binding]
         return sparql,fB
 
+    @staticmethod
+    def checkBindings(current,expected):
+        pritnt("checkBindings")
+        set_current = set(current.keys())
+        set_expected = set(expected.keys())
+        
+        set_difference = set_expected - set_current
+        if len(set_difference) != 0:
+            for key in set_difference:
+                if ((expected[key]["value"] != "UNDEF") and (expected[key]["value"] != "")):
+                    raise KeyError(key+" is a required forcedbinding")
+        return True

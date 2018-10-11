@@ -109,6 +109,7 @@ class Sepa:
                             secure=self._security["secure"],
                             tokenURI=self._security["tokenURI"],
                             registerURI=self._security["registerURI"])
+        self.logger.info("Query output code: {}".format(code))
         assert code
         if destination is not None:
             with open(destination,"w") as fileDest:
@@ -126,6 +127,7 @@ class Sepa:
                                             secure=self._security["secure"],
                                             tokenURI=self._security["tokenURI"],
                                             registerURI=self._security["registerURI"])
+        self.logger.info("Update output code: {}".format(code))
         assert code
         return output
         

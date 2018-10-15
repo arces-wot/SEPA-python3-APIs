@@ -3,7 +3,7 @@
 #
 #  tablaze.py
 #  
-#  Copyright 2018 Francesco Antoniazzi <francesco.antoniazzi@unibo.it>
+#  Copyright 2018 Francesco Antoniazzi <francesco.antoniazzi1991@gmail.com>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import prettytable
 import json
 import re
 
-def tablify(input_json,prefix_file=None):
+def tablify(input_json,prefix_file=None,destination=None):
     """
     This is the method to call when you import tablaze and
     don't use it as a stand alone script.
@@ -41,7 +41,7 @@ def tablify(input_json,prefix_file=None):
         - path to file containing prefix strings from sparql
         - list of prefix strings
     """
-    main({"prefixes": prefix_file, "file": input_json})
+    return main({"prefixes": prefix_file, "file": input_json, "destination": destination})
 
 def main(args):
     # builds prefix dictionary
@@ -54,20 +54,24 @@ def main(args):
         except:
             # this is when it's a list of strings
             lines = args["prefixes"]
-        for line in lines:
-            # here we parse the prefixes
-            m = re.match(r"prefix ([a-zA-Z]+): <(.+)>",line)
-            prefixes[m.groups()[0]] = m.groups()[1]
+            for line in lines:
+                # here we parse the prefixes
+                m = re.match(r"(prefix|PREFIX)\s+([a-zA-Z]+):\s+<(.+)>",line)
+                prefixes[m.groups()[1]] = m.groups()[2]
     
-    # loads the json from a file, or tries from the command line argument
     try:
-        with open(args["file"],"r") as bz_output:
-            json_output = json.load(bz_output)
+        json_output = args["file"]
+        variables = json_output["head"]["vars"]
     except:
-        json_output = json.loads(json.dumps(args["file"]))
+        # loads the json from a file, or tries from the command line argument
+        try:
+            with open(args["file"],"r") as bz_output:
+                json_output = json.load(bz_output)
+        except:
+            json_output = json.loads(json.dumps(args["file"]))
+        variables = json_output["head"]["vars"]
     
     # setup the table which will be given in output
-    variables = json_output["head"]["vars"]
     pretty = prettytable.PrettyTable(variables)
     
     # fills up the table: one line per binding
@@ -88,9 +92,11 @@ def main(args):
                 # special case: absent binding
                 tableLine.append("")
         pretty.add_row(tableLine)
-    print(str(pretty))
-    print("\n{} result(s)".format(len(json_output["results"]["bindings"])))
-    return 0
+    output = str(pretty)+"\n{} result(s)".format(len(json_output["results"]["bindings"]))
+    destination = args["destination"] if ("destination" in args.keys()) else stdout
+    if destination is not None:
+        print(output,file=destination)
+    return output
 
 if __name__ == '__main__':
     import sys

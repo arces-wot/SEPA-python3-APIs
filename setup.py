@@ -1,9 +1,9 @@
-from setuptools import setup
+import setuptools
 
 with open("README.md","r") as fh:
     long_description = fh.read()
 
-setup(name='sepy',
+setuptools.setup(name='sepy',
       version='0.3',
       description=' Client-side libraries for the SEPA platform (Python3) ',
       long_description=long_description,
@@ -13,7 +13,6 @@ setup(name='sepy',
       author_email='fabio.viola@unibo.it, francesco.antoniazzi@unibo.it',
       packages=setuptools.find_packages(),
       license='GPLv3',
-      packages=['sepy'],
       test_suite="sepy.tests",
       install_requires=[
           "websocket-client",

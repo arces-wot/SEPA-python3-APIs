@@ -36,7 +36,7 @@ import sys
 import ssl
 
 # local requirements
-from Exceptions import *
+from .Exceptions import *
 
 # class ConnectionHandler
 class ConnectionHandler:

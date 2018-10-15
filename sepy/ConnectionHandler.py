@@ -1,4 +1,27 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
+#
+#  ConnectionHandler.py
+#  
+#  Copyright 2018   Francesco Antoniazzi <francesco.antoniazzi1991@gmail.com>,
+#                   Fabio Viola <desmovalvo@gmail.com>
+#  
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#  
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#  
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+#  MA 02110-1301, USA.
+#  
+#  
 
 # global requirements
 import threading
@@ -13,8 +36,7 @@ import sys
 import ssl
 
 # local requirements
-from .Exceptions import *
-from .JPARHandler import *
+from Exceptions import *
 
 # class ConnectionHandler
 class ConnectionHandler:
@@ -22,7 +44,7 @@ class ConnectionHandler:
     """This is the ConnectionHandler class"""
 
     # constructor
-    def __init__(self, jpar = None, logLevel = 10, lastSEPA = False):
+    def __init__(self, logLevel = 10):
         
         """Constructor of the ConnectionHandler class"""
 
@@ -32,16 +54,6 @@ class ConnectionHandler:
         self.logger.debug("=== ConnectionHandler::__init__ invoked ===")
         logging.getLogger("urllib3").setLevel(logLevel)
         logging.getLogger("requests").setLevel(logLevel)
-
-        # jpar
-        self.jpar = jpar
-        if jpar != None:
-            self.jparHandler = JPARHandler(jpar)
-        else:
-            self.jparHandler = None
-
-        # last sepa?
-        self.lastSEPA = lastSEPA
             
         # open subscriptions
         self.websockets = {}
@@ -57,11 +69,11 @@ class ConnectionHandler:
 
         # perform the request
         if isQuery:
-            headers = {"Content-Type":"application/sparql-query", "Accept":"application/json"}
+            headers = { "Content-Type":"application/sparql-query", "Accept":"application/sparql-results+json"}
             r = requests.post(reqURI, headers = headers, data = sparql)
             r.connection.close()
         else:
-            headers = {"Content-Type":"application/sparql-update", "Accept":"application/json"}
+            headers = { "Content-Type": "application/sparql-update", "Accept":"application/sparql-results+json"}
             r = requests.post(reqURI, headers = headers, data = sparql.encode("utf-8"))
             r.connection.close()
         return r.status_code, r.text
@@ -69,44 +81,45 @@ class ConnectionHandler:
 
     # do HTTPS request
     def secureRequest(self, reqURI, sparql, isQuery, registerURI, tokenURI):
+        # TODO
+        pass
+        # # debug
+        # self.logger.debug("=== ConnectionHandler::secureRequest invoked ===")
 
-        # debug
-        self.logger.debug("=== ConnectionHandler::secureRequest invoked ===")
-
-        # check if jpar was given
-        if not self.jparHandler:
-            raise MissingJPARException
+        # # check if jpar was given
+        # if not self.jparHandler:
+            # raise MissingJPARException
         
-        # if the client is not yet registered, then register!
-        if not self.jparHandler.client_secret:
-            self.register(registerURI)
+        # # if the client is not yet registered, then register!
+        # if not self.jparHandler.client_secret:
+            # self.register(registerURI)
         
-        # if a token is not present, request it!
-        if not(self.jparHandler.jwt):
-            self.requestToken(tokenURI)
+        # # if a token is not present, request it!
+        # if not(self.jparHandler.jwt):
+            # self.requestToken(tokenURI)
                 
-        # perform the request
-        self.logger.debug("Performing a secure SPARQL request")
-        if isQuery:
-            headers = {"Content-Type":"application/sparql-query", 
-                       "Accept":"application/json",
-                       "Authorization": "Bearer " + self.jparHandler.jwt}
-            r = requests.post(reqURI, headers = headers, data = sparql, verify = False)        
-            r.connection.close()
-        else:
-            headers = {"Content-Type":"application/sparql-update", 
-                       "Accept":"application/json",
-                       "Authorization": "Bearer " + self.jparHandler.jwt}
-            r = requests.post(reqURI, headers = headers, data = sparql, verify = False)        
-            r.connection.close()
+        # # perform the request
+        # self.logger.debug("Performing a secure SPARQL request")
+        # if isQuery:
+            # headers = {"Content-Type":"application/sparql-query", 
+                       # "Accept":"application/json",
+                       # "Authorization": "Bearer " + self.jparHandler.jwt}
+            # r = requests.post(reqURI, headers = headers, data = sparql, verify = False)        
+            # r.connection.close()
+        # else:
+            # headers = {"Content-Type":"application/sparql-update", 
+                       # "Accept":"application/json",
+                       # "Authorization": "Bearer " + self.jparHandler.jwt}
+            # r = requests.post(reqURI, headers = headers, data = sparql, verify = False)        
+            # r.connection.close()
             
-        # check for errors on token validity
-        if r.status_code == 401:
-            self.jparHandler.jwt = None                
-            raise TokenExpiredException
+        # # check for errors on token validity
+        # if r.status_code == 401:
+            # self.jparHandler.jwt = None                
+            # raise TokenExpiredException
 
-        # return
-        return r.status_code, r.text
+        # # return
+        # return r.status_code, r.text
 
     
     ###################################################
@@ -116,35 +129,36 @@ class ConnectionHandler:
     ###################################################
 
     def register(self, registerURI):
+        # TODO
+        pass
+        # # debug print
+        # self.logger.debug("=== ConnectionHandler::register invoked ===")
 
-        # debug print
-        self.logger.debug("=== ConnectionHandler::register invoked ===")
-
-        # check if jpar was given
-        if not self.jparHandler:
-            raise MissingJPARException
+        # # check if jpar was given
+        # if not self.jparHandler:
+            # raise MissingJPARException
         
-        # define headers and payload
-        headers = {"Content-Type":"application/json", "Accept":"application/json"}
-        payload = '{"client_identity":' + self.jparHandler.client_id + ', "grant_types":["client_credentials"]}'
+        # # define headers and payload
+        # headers = {"Content-Type":"application/json", "Accept":"application/json"}
+        # payload = '{"client_identity":' + self.jparHandler.client_id + ', "grant_types":["client_credentials"]}'
 
-        # perform the request
-        r = requests.post(registerURI, headers = headers, data = payload, verify = False)        
-        r.connection.close()
-        if r.status_code == 201:
+        # # perform the request
+        # r = requests.post(registerURI, headers = headers, data = payload, verify = False)        
+        # r.connection.close()
+        # if r.status_code == 201:
 
-            # parse the response
-            jresponse = json.loads(r.text)
+            # # parse the response
+            # jresponse = json.loads(r.text)
 
-            # encode with base64 client_id and client_secret
-            cred = base64.b64encode(bytes(jresponse["client_id"] + ":" + jresponse["client_secret"], "utf-8"))
-            self.jparHandler.client_secret = "Basic " + cred.decode("utf-8")
+            # # encode with base64 client_id and client_secret
+            # cred = base64.b64encode(bytes(jresponse["client_id"] + ":" + jresponse["client_secret"], "utf-8"))
+            # self.jparHandler.client_secret = "Basic " + cred.decode("utf-8")
             
-            # store data into the jpar file
-            self.jparHandler.storeConfig()
+            # # store data into the jpar file
+            # self.jparHandler.storeConfig()
 
-        else:
-            raise RegistrationFailedException()
+        # else:
+            # raise RegistrationFailedException()
 
 
     ###################################################
@@ -155,27 +169,28 @@ class ConnectionHandler:
 
     # do request token
     def requestToken(self, tokenURI):
+        pass
+        # TODO
+        # # debug print
+        # self.logger.debug("=== ConnectionHandler::requestToken invoked ===")
 
-        # debug print
-        self.logger.debug("=== ConnectionHandler::requestToken invoked ===")
-
-        # check if jpar was given
-        if not self.jparHandler:
-            raise MissingJPARException
+        # # check if jpar was given
+        # if not self.jparHandler:
+            # raise MissingJPARException
         
-        # define headers and payload        
-        headers = {"Content-Type":"application/json", 
-                   "Accept":"application/json",
-                   "Authorization": self.jparHandler.client_secret}    
+        # # define headers and payload        
+        # headers = {"Content-Type":"application/json", 
+                   # "Accept":"application/json",
+                   # "Authorization": self.jparHandler.client_secret}    
 
-        # perform the request
-        r = requests.post(tokenURI, headers = headers, verify = False)        
-        r.connection.close()
-        if r.status_code == 201:
-            jresponse = json.loads(r.text)
-            self.jparHandler.jwt = jresponse["access_token"]
-        else:
-            raise TokenRequestFailedException()
+        # # perform the request
+        # r = requests.post(tokenURI, headers = headers, verify = False)        
+        # r.connection.close()
+        # if r.status_code == 201:
+            # jresponse = json.loads(r.text)
+            # self.jparHandler.jwt = jresponse["access_token"]
+        # else:
+            # raise TokenRequestFailedException()
 
 
     ###################################################
@@ -185,8 +200,7 @@ class ConnectionHandler:
     ###################################################
 
     # do open websocket
-    def openUnsecureWebsocket(self, subscribeURI, sparql, alias, handler):                         
-
+    def openUnsecureWebsocket(self, subscribeURI, sparql, alias, handler, default_graph=None, named_graph=None):
         # debug
         self.logger.debug("=== ConnectionHandler::openUnsecureWebsocket invoked ===")
 
@@ -203,44 +217,54 @@ class ConnectionHandler:
             
             # process message
             jmessage = json.loads(message)
-            if "subscribed" in jmessage:
-
-                # get the subid
+            notification = jmessage["notification"]
+            
+            if notification["sequence"]==0:
+                self.logger.debug("Subscription Confirmation")
                 nonlocal subid
-                subid = jmessage["subscribed"]
+                subid = notification["spuid"]
                 self.logger.debug("SUBID = " + subid)
-
                 # save the subscription id and the thread
                 self.websockets[subid] = ws
+            
+            try:
+                added = notification["addedResults"]["results"]["bindings"]
+            except KeyError as ke:
+                self.logger.debug(ke)
+                added = []
+            
+            try:
+                removed = notification["removedResults"]["results"]["bindings"]
+            except KeyError as ke:
+                self.logger.debug(ke)
+                removed = []
+            
+            # if "subscribed" in jmessage:
 
-                if not self.lastSEPA:
+                # # get the subid
+                # nonlocal subid
+                # subid = jmessage["subscribed"]
+                # self.logger.debug("SUBID = " + subid)
 
-                    # invoke the handler
-                    added = jmessage["firstResults"]["results"]["bindings"]
-                    handler.handle(added, [])
+                # # save the subscription id and the thread
+                # self.websockets[subid] = ws
 
-            elif "ping" in jmessage:                
-                pass # we ignore ping
-            else:
+                # added = jmessage["firstResults"]["results"]["bindings"]
+                # handler.handle(added, [])
 
-                if not self.lastSEPA:
-                
-                    # parsing jmessage
-                    added = jmessage["results"]["addedresults"]["bindings"]
-                    removed = jmessage["results"]["removedresults"]["bindings"]
-
-                else:
-
-                    # parsing jmessage
-                    added = jmessage["results"]["addedResults"]["bindings"]
-                    removed = jmessage["results"]["removedResults"]["bindings"]
+            # elif "ping" in jmessage:                
+                # pass # we ignore ping
+            # else:
+                # # parsing jmessage
+                # added = jmessage["results"]["addedresults"]["bindings"]
+                # removed = jmessage["results"]["removedresults"]["bindings"]
                     
-                # debug print
-                self.logger.debug("Added bindings: {}".format(added))
-                self.logger.debug("Removed bindings: {}".format(removed))
+                # # debug print
+                # self.logger.debug("Added bindings: {}".format(added))
+                # self.logger.debug("Removed bindings: {}".format(removed))
 
-                # invoke the handler
-                handler.handle(added,removed)
+                # # invoke the handler
+            handler(added,removed)
 
 
         # on_error callback
@@ -257,10 +281,7 @@ class ConnectionHandler:
             self.logger.debug("=== ConnectionHandler::on_close invoked ===")
 
             # destroy the websocket dictionary
-            try:
-                del self.websockets[subid]
-            except:
-                pass
+            del self.websockets[subid]
 
 
         # on_open callback
@@ -271,8 +292,13 @@ class ConnectionHandler:
 
             # composing message
             msg = {}
-            msg["subscribe"] = sparql
-            msg["alias"] = alias
+            msg["subscribe"] = {}
+            msg["subscribe"]["sparql"] = sparql
+            msg["subscribe"]["alias"] = alias
+            if default_graph is not None:
+                msg["subscribe"]["default-graph-uri"] = default_graph
+            if named_graph is not None:
+                msg["subscribe"]["default-graph-uri"] = named_graph
 
             # send subscription request
             ws.send(json.dumps(msg))
@@ -412,17 +438,20 @@ class ConnectionHandler:
         return subid
     
 
-    def closeWebsocket(self, subid, secure):
+    def closeWebsocket(self, subid):
 
         # debug
         self.logger.debug("=== ConnectionHandler::closeWebSocket invoked ===")
 
-        # TODO -- send the unsubscribe message instead of closing in a brutal way
+        # TODO -- missing security "authorization"
+        msg = {"unsubscribe":{"spuid":subid}}
+        self.websockets[subid].send(json.dumps(msg))
         
         # retrieve the subscription, close it and delete it
         try:
             self.websockets[subid].close()
-            del self.websockets[subid]
         except:
             pass
         
+    def get_subscriptions(self):
+        return self.websockets

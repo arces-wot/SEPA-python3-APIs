@@ -74,7 +74,7 @@ class ConnectionHandler:
             r.connection.close()
         else:
             headers = { "Content-Type": "application/sparql-update", "Accept":"application/sparql-results+json"}
-            r = requests.post(reqURI, headers = headers, data = sparql.encode("utf-8"))
+            r = requests.post(reqURI, headers = headers, data = sparql)
             r.connection.close()
         return r.status_code, r.text
 

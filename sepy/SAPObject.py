@@ -23,6 +23,8 @@
 #  
 
 from urllib.parse import urlparse
+from jinja2 import Environment, FileSystemLoader, BaseLoader
+from os.path import split, abspath, exists
 
 import logging
 
@@ -199,3 +201,93 @@ class SAPObject:
             return result
         else:
             return namespaces
+    
+    @staticmethod
+    def generate(   sap_template,
+                    host,
+                    sparql11,
+                    sparql11se,
+                    queries=None,
+                    updates=None,
+                    namespaces=None,
+                    graphs=None,
+                    extended=None,
+                    oauth=None,
+                    destination_file=None):
+        """
+        Generates an ysap file, and returns it as string.
+        If destination_file is given, the file is created and written at
+        the corresponding path.
+        """
+        if sap_template is None:
+            raise ValueError("'sap_template' cannot be None")
+        if host is None:
+            raise ValueError("'host' cannot be None")
+        if sparql11 is None:
+            raise ValueError("'sparql11' cannot be None")
+        if sparql11se is None:
+            raise ValueError("'sparql11se' cannot be None")
+        if ((queries is None or queries=={}) and (updates is None or updates=={})):
+            raise ValueError("'queries' and 'updates' cannot be both None or empty")
+        logger = logging.getLogger("sapLogger")
+        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+        
+        if exists(sap_template):      
+            logger.debug("'sap_template' is a path to existing file")              
+            sap_dir,sap_file = split(abspath(sap_template))
+            j2_env = Environment(loader=FileSystemLoader(sap_dir),
+                trim_blocks=True, lstrip_blocks=True)
+            template = j2_env.get_template(sap_file)
+        else:
+            logger.warning("'sap_template' is interpreted as string")
+            j2_env = Environment(loader=BaseLoader(),
+                trim_blocks=True, lstrip_blocks=True)
+            template = j2_env.from_string(sap_template)
+        
+        render_data = {}
+        render_data["host_ip_address"] = host
+        
+        if ["protocol","port","query","update"] != list(sparql11.keys()):
+            raise KeyError("Missing key in sparql11 parameter")
+        if ["path","method","format"] != list(sparql11["query"].keys()):
+            raise KeyError("Missing key in sparql11::query parameter")
+        if ["path","method","format"] != list(sparql11["update"].keys()):
+            raise KeyError("Missing key in sparql11::update parameter")
+        render_data["sparql11"] = dict(sparql11)
+        
+        logger.warning("No check is made on sparql11se content, except 'protocol'!")
+        if "protocol" not in sparql11se.keys():
+            raise KeyError("Missing 'protocol' key in sparql11se parameter")
+        render_data["sparql11se"] = dict(sparql11se)
+        
+        logger.warning("No check is made on queries and updates, except 'sparql'!")
+        if (queries is not None) and (queries != {}):
+            for key in queries.keys():
+                if "sparql" not in queries[key].keys():
+                    raise KeyError("Missing 'sparql' key in queries::{}".format(key))
+            render_data["queries"] = queries
+        if (updates is not None) and (updates != {}):
+            for key in updates.keys():
+                if "sparql" not in updates[key].keys():
+                    raise KeyError("Missing 'sparql' key in updates::{}".format(key))
+            render_data["updates"] = updates
+        if oauth is not None:
+            logger.warning("No check is made on oauth content!")
+            render_data["oauth"] = oauth
+        if namespaces is not None:
+            logger.warning("No check is made on namespaces content!")
+            render_data["namespaces"] = namespaces
+        if graphs is not None:
+            logger.warning("No check is made on graphs content!")
+            render_data["graphs"] = graphs
+        if extended is not None:
+            logger.warning("No check is made on extended content!")
+            render_data["extended"] = extended
+        
+        sapFileString = template.render(render_data)
+        print(sapFileString)
+        if destination_file is not None:
+            with open(destination_file,"w") as csap:
+                print(sapFileString,file=csap)
+        return sapFileString
+

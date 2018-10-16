@@ -116,6 +116,48 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         self.engine.update("INSERT_VARIABLE_GREETING",
             forcedBindings={"nome":"test:Adriano","qualcosa":"Salve"})
         self.assertTrue(testEvent.wait(timeout=3))
+        self.engine.clear()
+        
+    def test_4(self):
+        sparql11 = {"protocol": "http",
+                    "port": 8000,
+                    "query": {"path":"/query","method":"POST","format":"JSON"},
+                    "update": {"path":"/query","method":"POST","format":"JSON"}}
+        sparql11se = {  "protocol": "ws",
+                        "availableProtocols": { "ws":{"port":9000,"path":"/subscribe"},
+                                                "wss":{"port":9443,"path":"/secure/subscribe"}}}
+        queries = { "QUERY_GREETINGS": {
+                        "sparql":"select * where {?nome test:dice ?qualcosa}" }
+                        }
+        updates = { "INSERT_GREETING": {
+                        "sparql":"insert data {test:Francesco test:dice 'Ciao'}" },
+                    "INSERT_VARIABLE_GREETING": {
+                        "sparql": "insert data {?nome test:dice ?qualcosa}",
+                        "forcedBindings": {
+                            "nome": {"type":"uri", "value":"\"\""},
+                            "qualcosa": {"type":"literal", "value":"\"\""}}
+                            }
+                        }
+        extended = {"type": "basic", 
+                    "base": 0,
+                    "clients": 10,
+                    "messages": 1}
+        namespaces = {  "schema":"http://schema.org",
+                        "rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                        "test":"http://wot.arces.unibo.it/test#"}
+        oauth = {   "enable":"false",
+                    "register":"https://localhost:8443/oauth/register",
+                    "tokenRequest":"https://localhost:8443/oauth/token"}
+        sap = SAPObject.generate(resource_filename(__name__, "sap_template.sap"),
+            "localhost",
+            sparql11,
+            sparql11se,
+            queries=queries,
+            updates=updates,
+            namespaces=namespaces,
+            oauth=oauth,
+            extended=extended)
+        self.assertEqual(yaml.load(sap),self.ysap)
 
 if __name__ == '__main__':
     unittest.main(failfast=True)

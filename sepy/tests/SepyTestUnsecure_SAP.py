@@ -25,14 +25,12 @@
 from pkg_resources import resource_filename
 
 import unittest
-from sys import stdout as stdout
 from collections import defaultdict
 
 import yaml
-import json
-from sepy.SAPObject import SAPObject
+from sepy.SAPObject import SAPObject, generate, YsapTemplate, defaultdict_to_dict
 from sepy.SEPA import SEPA
-from sepy.tablaze import tablify
+from sepy.tablaze import tablify, check_table_equivalence
 
 class SepyTestUnsecure_SAP(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -56,21 +54,13 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
 +----------------------+-----------------+----------------+
 1 result(s)"""
         self.assertEqual(tablify(result,prefix_file=self.prefixes), expected)
-    
-    @staticmethod
-    def check_equivalence(result,expected,prefixes):
-        ex = expected.split("\n")
-        ex.sort()
-        table = tablify(result,prefix_file=prefixes).split("\n")
-        table.sort()
-        return (ex==table)
         
     def test_2(self):
         self.assertRaises(KeyError,self.engine.update,"INSERT_VARIABLE_GREETING")
         self.engine.update("INSERT_VARIABLE_GREETING",
             forcedBindings={"nome":"test:Fabio","qualcosa":"Hello"})
         result = self.engine.query("QUERY_GREETINGS")
-        self.assertTrue(SepyTestUnsecure_SAP.check_equivalence(result, \
+        self.assertTrue(check_table_equivalence(result, \
 """+----------------------+-----------------+
 |         nome         |     qualcosa    |
 +----------------------+-----------------+
@@ -93,7 +83,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             addedObject["results"]={}
             addedObject["results"]["bindings"]=added
             if notif_counter == 1:
-                self.assertTrue(SepyTestUnsecure_SAP.check_equivalence(addedObject, \
+                self.assertTrue(check_table_equivalence(addedObject, \
 """+----------------------+-----------------+
 |         nome         |     qualcosa    |
 +----------------------+-----------------+
@@ -103,7 +93,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
 2 result(s)""",self.prefixes))
                 self.assertEqual(removed,[])
             elif notif_counter == 2:
-                self.assertTrue(SepyTestUnsecure_SAP.check_equivalence(addedObject, \
+                self.assertTrue(check_table_equivalence(addedObject, \
 """+--------------------+-----------------+
 |        nome        |     qualcosa    |
 +--------------------+-----------------+
@@ -118,12 +108,6 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             forcedBindings={"nome":"test:Adriano","qualcosa":"Salve"})
         self.assertTrue(testEvent.wait(timeout=3))
         self.engine.clear()
-    
-    @staticmethod
-    def defaultdict_to_dict(d):
-        if isinstance(d, defaultdict):
-            d = {k: SepyTestUnsecure_SAP.defaultdict_to_dict(v) for k, v in d.items()}
-        return d
     
     def test_4(self):
         nested_dict = lambda: defaultdict(nested_dict)
@@ -144,7 +128,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         sparql11se["availableProtocols"]["ws"]["path"] = "/subscribe"
         sparql11se["availableProtocols"]["wss"]["port"] = 9443
         sparql11se["availableProtocols"]["wss"]["path"] = "/secure/subscribe"
-        sparql11se = SepyTestUnsecure_SAP.defaultdict_to_dict(sparql11se)
+        sparql11se = defaultdict_to_dict(sparql11se)
         
         queries = nested_dict()
         queries["QUERY_GREETINGS"]["sparql"] = "select * where {?nome test:dice ?qualcosa}"
@@ -156,7 +140,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["nome"]["value"] = "\"\""
         updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["qualcosa"]["type"] = "literal"
         updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["qualcosa"]["value"] = "\"\""
-        updates = SepyTestUnsecure_SAP.defaultdict_to_dict(updates)
+        updates = defaultdict_to_dict(updates)
         
         extended = nested_dict()
         extended["type"] = "basic"
@@ -174,15 +158,15 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         oauth["register"] = "https://localhost:8443/oauth/register"
         oauth["tokenRequest"] = "https://localhost:8443/oauth/token"
         
-        sap = SAPObject.generate(resource_filename(__name__, "../sap_template.sap"),
-            "localhost",
-            sparql11,
-            sparql11se,
-            queries=queries,
-            updates=updates,
-            namespaces=namespaces,
-            oauth=oauth,
-            extended=extended)
+        sap = generate( YsapTemplate,
+                        "localhost",
+                        sparql11,
+                        sparql11se,
+                        queries=queries,
+                        updates=updates,
+                        namespaces=namespaces,
+                        oauth=oauth,
+                        extended=extended)
         self.assertEqual(yaml.load(sap),self.ysap.parsed_sap)
 
 if __name__ == '__main__':

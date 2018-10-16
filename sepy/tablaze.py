@@ -42,6 +42,13 @@ def tablify(input_json,prefix_file=None,destination=None):
         - list of prefix strings
     """
     return main({"prefixes": prefix_file, "file": input_json, "destination": destination})
+    
+def check_table_equivalence(result,expected,prefixes):
+    ex = expected.split("\n")
+    ex.sort()
+    table = tablify(result,prefix_file=prefixes).split("\n")
+    table.sort()
+    return (ex==table)
 
 def main(args):
     # builds prefix dictionary

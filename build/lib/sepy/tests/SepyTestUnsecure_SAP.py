@@ -25,13 +25,12 @@
 from pkg_resources import resource_filename
 
 import unittest
-from sys import stdout as stdout
+from collections import defaultdict
 
 import yaml
-import json
-from sepy.SAPObject import SAPObject
+from sepy.SAPObject import SAPObject, generate, YsapTemplate, defaultdict_to_dict
 from sepy.SEPA import SEPA
-from sepy.tablaze import tablify
+from sepy.tablaze import tablify, check_table_equivalence
 
 class SepyTestUnsecure_SAP(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -55,21 +54,13 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
 +----------------------+-----------------+----------------+
 1 result(s)"""
         self.assertEqual(tablify(result,prefix_file=self.prefixes), expected)
-    
-    @staticmethod
-    def check_equivalence(result,expected,prefixes):
-        ex = expected.split("\n")
-        ex.sort()
-        table = tablify(result,prefix_file=prefixes).split("\n")
-        table.sort()
-        return (ex==table)
         
     def test_2(self):
         self.assertRaises(KeyError,self.engine.update,"INSERT_VARIABLE_GREETING")
         self.engine.update("INSERT_VARIABLE_GREETING",
             forcedBindings={"nome":"test:Fabio","qualcosa":"Hello"})
         result = self.engine.query("QUERY_GREETINGS")
-        self.assertTrue(SepyTestUnsecure_SAP.check_equivalence(result, \
+        self.assertTrue(check_table_equivalence(result, \
 """+----------------------+-----------------+
 |         nome         |     qualcosa    |
 +----------------------+-----------------+
@@ -92,7 +83,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             addedObject["results"]={}
             addedObject["results"]["bindings"]=added
             if notif_counter == 1:
-                self.assertTrue(SepyTestUnsecure_SAP.check_equivalence(addedObject, \
+                self.assertTrue(check_table_equivalence(addedObject, \
 """+----------------------+-----------------+
 |         nome         |     qualcosa    |
 +----------------------+-----------------+
@@ -102,7 +93,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
 2 result(s)""",self.prefixes))
                 self.assertEqual(removed,[])
             elif notif_counter == 2:
-                self.assertTrue(SepyTestUnsecure_SAP.check_equivalence(addedObject, \
+                self.assertTrue(check_table_equivalence(addedObject, \
 """+--------------------+-----------------+
 |        nome        |     qualcosa    |
 +--------------------+-----------------+
@@ -117,47 +108,66 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             forcedBindings={"nome":"test:Adriano","qualcosa":"Salve"})
         self.assertTrue(testEvent.wait(timeout=3))
         self.engine.clear()
-        
+    
     def test_4(self):
-        sparql11 = {"protocol": "http",
-                    "port": 8000,
-                    "query": {"path":"/query","method":"POST","format":"JSON"},
-                    "update": {"path":"/query","method":"POST","format":"JSON"}}
-        sparql11se = {  "protocol": "ws",
-                        "availableProtocols": { "ws":{"port":9000,"path":"/subscribe"},
-                                                "wss":{"port":9443,"path":"/secure/subscribe"}}}
-        queries = { "QUERY_GREETINGS": {
-                        "sparql":"select * where {?nome test:dice ?qualcosa}" }
-                        }
-        updates = { "INSERT_GREETING": {
-                        "sparql":"insert data {test:Francesco test:dice 'Ciao'}" },
-                    "INSERT_VARIABLE_GREETING": {
-                        "sparql": "insert data {?nome test:dice ?qualcosa}",
-                        "forcedBindings": {
-                            "nome": {"type":"uri", "value":"\"\""},
-                            "qualcosa": {"type":"literal", "value":"\"\""}}
-                            }
-                        }
-        extended = {"type": "basic", 
-                    "base": 0,
-                    "clients": 10,
-                    "messages": 1}
-        namespaces = {  "schema":"http://schema.org",
-                        "rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                        "test":"http://wot.arces.unibo.it/test#"}
-        oauth = {   "enable":"false",
-                    "register":"https://localhost:8443/oauth/register",
-                    "tokenRequest":"https://localhost:8443/oauth/token"}
-        sap = SAPObject.generate(resource_filename(__name__, "sap_template.sap"),
-            "localhost",
-            sparql11,
-            sparql11se,
-            queries=queries,
-            updates=updates,
-            namespaces=namespaces,
-            oauth=oauth,
-            extended=extended)
-        self.assertEqual(yaml.load(sap),self.ysap)
+        nested_dict = lambda: defaultdict(nested_dict)
+        
+        sparql11 = nested_dict()
+        sparql11["protocol"] = "http"
+        sparql11["port"] = 8000
+        sparql11["query"]["path"] = "/query"
+        sparql11["query"]["method"] = "POST"
+        sparql11["query"]["format"] = "JSON"
+        sparql11["update"]["path"] = "/update"
+        sparql11["update"]["method"] = "POST"
+        sparql11["update"]["format"] = "JSON"
+        
+        sparql11se = nested_dict()
+        sparql11se["protocol"] = "ws"
+        sparql11se["availableProtocols"]["ws"]["port"] = 9000
+        sparql11se["availableProtocols"]["ws"]["path"] = "/subscribe"
+        sparql11se["availableProtocols"]["wss"]["port"] = 9443
+        sparql11se["availableProtocols"]["wss"]["path"] = "/secure/subscribe"
+        sparql11se = defaultdict_to_dict(sparql11se)
+        
+        queries = nested_dict()
+        queries["QUERY_GREETINGS"]["sparql"] = "select * where {?nome test:dice ?qualcosa}"
+
+        updates = nested_dict()
+        updates["INSERT_GREETING"]["sparql"] = "insert data {test:Francesco test:dice 'Ciao'}"
+        updates["INSERT_VARIABLE_GREETING"]["sparql"] = "insert data {?nome test:dice ?qualcosa}"
+        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["nome"]["type"] = "uri"
+        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["nome"]["value"] = "\"\""
+        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["qualcosa"]["type"] = "literal"
+        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["qualcosa"]["value"] = "\"\""
+        updates = defaultdict_to_dict(updates)
+        
+        extended = nested_dict()
+        extended["type"] = "basic"
+        extended["base"] = 0
+        extended["clients"] = 10
+        extended["messages"] = 1
+        
+        namespaces = nested_dict()
+        namespaces["schema"] = "http://schema.org"
+        namespaces["rdf"] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        namespaces["test"] = "http://wot.arces.unibo.it/test#"
+        
+        oauth = nested_dict()
+        oauth["enable"] = "false"
+        oauth["register"] = "https://localhost:8443/oauth/register"
+        oauth["tokenRequest"] = "https://localhost:8443/oauth/token"
+        
+        sap = generate( YsapTemplate,
+                        "localhost",
+                        sparql11,
+                        sparql11se,
+                        queries=queries,
+                        updates=updates,
+                        namespaces=namespaces,
+                        oauth=oauth,
+                        extended=extended)
+        self.assertEqual(yaml.load(sap),self.ysap.parsed_sap)
 
 if __name__ == '__main__':
     unittest.main(failfast=True)

@@ -1,4 +1,0 @@
-argparse
-prettytable
-pyyaml
-websocket-client

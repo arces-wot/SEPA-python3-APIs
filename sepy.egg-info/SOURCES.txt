@@ -1,3 +1,4 @@
+MANIFEST.in
 README.rst
 setup.py
 sepy/ConnectionHandler.py
@@ -6,6 +7,7 @@ sepy/SAPObject.py
 sepy/SEPA.py
 sepy/__init__.py
 sepy/tablaze.py
+sepy/ysap_template.sap
 sepy.egg-info/PKG-INFO
 sepy.egg-info/SOURCES.txt
 sepy.egg-info/dependency_links.txt
@@ -14,3 +16,4 @@ sepy.egg-info/requires.txt
 sepy.egg-info/top_level.txt
 sepy/tests/SepyTestUnsecure_SAP.py
 sepy/tests/__init__.py
+sepy/tests/test.ysap

@@ -5,10 +5,10 @@ Client-side libraries for the SEPA platform (Python3)
 
 Go to the folder named `dist`, uncompress the archive using `tar`, then 
 type the usual:
-```python setup.py build```
+```python3 setup.py build```
 
 and
-```python setup.py install```
+```python3 setup.py install```
 
 (this one as root).
 
@@ -19,7 +19,7 @@ from sepy.<the class you want to import> import *
 
 For example, if you want to import the SAPObject (used to handle JSAP files) 
 you have to write:
-```python
+```python3
 from sepy.JSAPObject import *
 ```
 

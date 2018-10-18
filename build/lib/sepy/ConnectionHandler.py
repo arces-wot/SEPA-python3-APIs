@@ -370,6 +370,8 @@ class ConnectionHandler:
 
             elif "ping" in jmessage:                
                 pass # we ignore ping
+            elif "unsubscribe" in jmessage:
+                print(jmessage)
             else:
                 # parsing jmessage
                 added = jmessage["results"]["addedresults"]["bindings"]
@@ -444,7 +446,9 @@ class ConnectionHandler:
         self.logger.debug("=== ConnectionHandler::closeWebSocket invoked ===")
 
         # TODO -- missing security "authorization"
-        msg = {"unsubscribe":{"spuid":subid}}
+        msg = {}
+        msg["unsubscribe"] = {}
+        msg["unsubscribe"]["spuid"] = subid
         self.websockets[subid].send(json.dumps(msg))
         
         # retrieve the subscription, close it and delete it

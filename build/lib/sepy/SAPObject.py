@@ -24,7 +24,7 @@
 
 from urllib.parse import urlparse
 from jinja2 import Environment, FileSystemLoader, BaseLoader
-from os.path import split, abspath, exists
+from os.path import split, abspath, isfile
 from pkg_resources import resource_filename
 from collections import defaultdict
 from io import TextIOBase
@@ -235,7 +235,7 @@ def generate(   sap_template,
     logger = logging.getLogger("sapLogger")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     
-    if exists(sap_template):      
+    if isfile(sap_template):      
         logger.debug("'sap_template' is a path to existing file")              
         sap_dir,sap_file = split(abspath(sap_template))
         j2_env = Environment(loader=FileSystemLoader(sap_dir),

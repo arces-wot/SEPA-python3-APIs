@@ -27,6 +27,7 @@ from pkg_resources import resource_filename
 import unittest
 from collections import defaultdict
 
+import logging
 import yaml
 from sepy.SAPObject import SAPObject, generate, YsapTemplate, defaultdict_to_dict
 from sepy.SEPA import SEPA
@@ -37,7 +38,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         super().__init__(*args, **kwargs)
         with open(resource_filename(__name__, "test.ysap"), "r") as sap_file:
             self.ysap = SAPObject(yaml.load(sap_file))
-        self.engine = SEPA(sapObject=self.ysap)
+        self.engine = SEPA(sapObject=self.ysap,logLevel=logging.INFO)
         self.prefixes = self.ysap.get_namespaces(stringList=True)
         
     def test_0(self):

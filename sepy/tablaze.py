@@ -32,14 +32,14 @@ import re
 
 def tablify(input_json,prefix_file=None,destination=None):
     """
-    This is the method to call when you import tablaze and
-    don't use it as a stand alone script.
+    This is the method to call when you import tablaze within your program.
     input_json can be given as
-        - path to json file to be rendere
+        - json object
+        - path to json file to be rendered
         - string with the json itself
     prefix_file is not compulsory, and you can give it as
         - path to file containing prefix strings from sparql
-        - list of prefix strings
+        - list of prefix strings as "PREFIX smthng: <some_url>
     """
     return main({"prefixes": prefix_file, "file": input_json, "destination": destination})
     

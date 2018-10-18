@@ -210,62 +210,38 @@ class ConnectionHandler:
 
         # on_message callback
         def on_message(ws, message):
-
+            nonlocal subid
             # debug
             self.logger.debug("=== ConnectionHandler::on_message invoked ===")
             self.logger.debug(message)
             
             # process message
             jmessage = json.loads(message)
-            notification = jmessage["notification"]
-            
-            if notification["sequence"]==0:
-                self.logger.debug("Subscription Confirmation")
-                nonlocal subid
-                subid = notification["spuid"]
-                self.logger.debug("SUBID = " + subid)
-                # save the subscription id and the thread
-                self.websockets[subid] = ws
-            
-            try:
-                added = notification["addedResults"]["results"]["bindings"]
-            except KeyError as ke:
-                self.logger.debug(ke)
-                added = []
-            
-            try:
-                removed = notification["removedResults"]["results"]["bindings"]
-            except KeyError as ke:
-                self.logger.debug(ke)
-                removed = []
-            
-            # if "subscribed" in jmessage:
-
-                # # get the subid
-                # nonlocal subid
-                # subid = jmessage["subscribed"]
-                # self.logger.debug("SUBID = " + subid)
-
-                # # save the subscription id and the thread
-                # self.websockets[subid] = ws
-
-                # added = jmessage["firstResults"]["results"]["bindings"]
-                # handler.handle(added, [])
-
-            # elif "ping" in jmessage:                
-                # pass # we ignore ping
-            # else:
-                # # parsing jmessage
-                # added = jmessage["results"]["addedresults"]["bindings"]
-                # removed = jmessage["results"]["removedresults"]["bindings"]
-                    
-                # # debug print
-                # self.logger.debug("Added bindings: {}".format(added))
-                # self.logger.debug("Removed bindings: {}".format(removed))
-
-                # # invoke the handler
-            handler(added,removed)
-
+            if "unsubscribed" in jmessage.keys():
+                # retrieve the subscription, close it and delete it
+                try:
+                    self.websockets[subid].close()
+                except Exception as e:
+                    self.logger.error(e)
+            else:
+                notification = jmessage["notification"]
+                if notification["sequence"]==0:
+                    self.logger.debug("Subscription Confirmation")
+                    subid = notification["spuid"]
+                    self.logger.debug("SUBID = " + subid)
+                    # save the subscription id and the thread
+                    self.websockets[subid] = ws
+                try:
+                    added = notification["addedResults"]["results"]["bindings"]
+                except KeyError as ke:
+                    self.logger.debug(ke)
+                    added = []
+                try:
+                    removed = notification["removedResults"]["results"]["bindings"]
+                except KeyError as ke:
+                    self.logger.debug(ke)
+                    removed = []
+                handler(added,removed)
 
         # on_error callback
         def on_error(ws, error):
@@ -370,8 +346,9 @@ class ConnectionHandler:
 
             elif "ping" in jmessage:                
                 pass # we ignore ping
-            elif "unsubscribe" in jmessage:
+            elif "unsubscribed" in jmessage:
                 print(jmessage)
+                self.unsubscribe_event.set()
             else:
                 # parsing jmessage
                 added = jmessage["results"]["addedresults"]["bindings"]
@@ -441,21 +418,13 @@ class ConnectionHandler:
     
 
     def closeWebsocket(self, subid):
-
         # debug
         self.logger.debug("=== ConnectionHandler::closeWebSocket invoked ===")
-
         # TODO -- missing security "authorization"
         msg = {}
         msg["unsubscribe"] = {}
         msg["unsubscribe"]["spuid"] = subid
         self.websockets[subid].send(json.dumps(msg))
-        
-        # retrieve the subscription, close it and delete it
-        try:
-            self.websockets[subid].close()
-        except:
-            pass
         
     def get_subscriptions(self):
         return self.websockets

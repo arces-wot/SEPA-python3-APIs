@@ -3,14 +3,14 @@ Client-side libraries for the SEPA platform (Python3)
 
 ## Installation and usage
 
-Go to the folder named `dist`, uncompress the archive using `tar`, then 
-type the usual:
-```python3 setup.py build```
+Clone the repository.
 
-and
-```python3 setup.py install```
-
-(this one as root).
+```
+cd SEPA-python3-APIs
+sudo python3 setup.py build
+sudo python3 setup.py sdist
+sudo python3 setup.py install
+```
 
 To use the classes you have to import them in this way:
 ```
@@ -20,7 +20,7 @@ from sepy.<the class you want to import> import *
 For example, if you want to import the SAPObject (used to handle JSAP files) 
 you have to write:
 ```python3
-from sepy.JSAPObject import *
+from sepy.SAPObject import *
 ```
 
 This library consists of 5 modules that can be used for different purposes:
@@ -57,7 +57,7 @@ are available, giving the host communication information each time.
 
 ### Creating a SEPA client
 
-```python
+```python3
 mySAP = open(path_to_sap,"r")
 sap = SAPObject(yaml.load(mySAP))
 sc = SEPA(sapObject=sap)
@@ -96,7 +96,7 @@ sap = SAPObject(json.load(mySAP))
 
 ## Something else?
 
-Documentation is being written
+Documentation is being written...
 
 ## Foreseen changes
 Minors, plus the addition of some utilities.

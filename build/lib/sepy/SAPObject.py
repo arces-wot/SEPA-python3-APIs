@@ -157,10 +157,7 @@ class SAPObject:
     def get_namespaces(self,stringList=False):
         namespaces = self.explore(["namespaces"])
         if stringList:
-            result = []
-            for ns, uri in namespaces.items():
-                result.append("PREFIX {}: <{}>".format(ns,uri))
-            return result
+            return [ "PREFIX {}: <{}>".format(ns,uri) for ns, uri in namespaces.items() ]
         else:
             return namespaces
 
@@ -188,7 +185,15 @@ def checkBindings(current,expected):
             if expected[key]["value"] == "":
                 raise KeyError(key+" is a required forcedbinding")
     return True
-    
+
+def uriFormat(uri):
+    parseBN_URI = urlparse(uri)
+    if parseBN_URI.scheme == "" or parseBN_URI.netloc == "":
+        # prefixed uri, like rdf:type
+        return uri
+    else:
+        return "<"+uri+">"
+
 def sparqlBuilder(unbound_sparql,bindings,namespaces=[]):
     """
     Forced bindings substitution into unbounded SPARQL
@@ -199,11 +204,7 @@ def sparqlBuilder(unbound_sparql,bindings,namespaces=[]):
         if bindings[b]["type"] == "literal":
             sparql = sparql.replace("?"+b,"'"+bValue+"'")
         else:
-            parseBN_URI = urlparse(bValue)
-            if parseBN_URI.scheme == "" or parseBN_URI.netloc == "":
-                sparql = sparql.replace("?"+b,bValue)
-            else:
-                sparql = sparql.replace("?"+b,"<"+bValue+">")
+            sparql = sparql.replace("?"+b,uriFormat(bValue))
     return sparql
     
 def generate(   sap_template,

@@ -46,7 +46,8 @@ class SEPA:
     def setSAP(self,sapObject):
         self.sap = sapObject
         
-    def query(self,sapIdentifier,forcedBindings={},destination=None,host=None,token_url=None,register_url=None):
+    def query(  self,sapIdentifier,forcedBindings={},destination=None,
+                host=None,token_url=None,register_url=None):
         """
         Performs a query with the sap entry tag;
         If you want to store the output of the query somewhere, use the 'destination' field.
@@ -56,7 +57,8 @@ class SEPA:
             token_url=token_url, register_url=register_url)
 
         
-    def sparql_query(self,sparql,destination=None,host=None,token_url=None,register_url=None):
+    def sparql_query(   self,sparql,destination=None,host=None,
+                        token_url=None,register_url=None):
         """
         Performs a query with the sparql and its forcedBindings;
         If you want to store the output of the query somewhere, use the 'destination' field.
@@ -83,7 +85,8 @@ class SEPA:
             self.logger.error("Query status code: {}".format(status))
             raise
         
-    def update(self,sapIdentifier,forcedBindings={},host=None,token_url=None,register_url=None):
+    def update( self,sapIdentifier,forcedBindings={},
+                host=None,token_url=None,register_url=None):
         """
         Performs an update with the sap entry tag;
         """
@@ -125,7 +128,9 @@ class SEPA:
         return self.sparql_query("select * where {?a ?b ?c}", host=host, 
             token_url=token_url, register_url=register_url)
         
-    def sparql_subscribe(self,sparql,alias,handler=lambda a,r: None,host=None,token_url=None,register_url=None, default_graph=None, named_graph=None):
+    def sparql_subscribe(   self,sparql,alias,handler=lambda a,r: None,
+                            host=None,token_url=None,register_url=None, 
+                            default_graph=None, named_graph=None):
         subid = None
         sepa_host = self.sap.subscribe_url if (host is None) else host
         if (default_graph is not None) or ("default-graph-uri" not in self.sap.graphs.keys()):
@@ -146,7 +151,10 @@ class SEPA:
                 sparql, alias, handler, default_graph=def_graph, named_graph=nam_graph)
         return subid
         
-    def subscribe(self,sapIdentifier,alias,forcedBindings={},handler=lambda a,r: None,host=None,token_url=None,register_url=None, default_graph=None, named_graph=None):
+    def subscribe(  self,sapIdentifier,alias,forcedBindings={},
+                    handler=lambda a,r: None,
+                    host=None,token_url=None,register_url=None, 
+                    default_graph=None, named_graph=None):
         """
         Performs a subscription with the sap identifier tag and its forcedBindings;
         You can give an 'alias' to the subscription, as well as an handler. 

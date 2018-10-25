@@ -121,12 +121,12 @@ class SEPA:
         return self.sparql_update("delete where {?a ?b ?c}", host=host, 
             token_url=token_url, register_url=register_url)
         
-    def query_all(self,host=None,token_url=None,register_url=None):
+    def query_all(self,destination=None,host=None,token_url=None,register_url=None):
         """
         Performs a select * where {?a ?b ?c}
         """
-        return self.sparql_query("select * where {?a ?b ?c}", host=host, 
-            token_url=token_url, register_url=register_url)
+        return self.sparql_query("select * where {?a ?b ?c}", destination=destination,
+            host=host, token_url=token_url, register_url=register_url)
         
     def sparql_subscribe(   self,sparql,alias,handler=lambda a,r: None,
                             host=None,token_url=None,register_url=None, 

@@ -222,7 +222,7 @@ class ConnectionHandler:
                 try:
                     self.websockets[subid].close()
                 except Exception as e:
-                    self.logger.error(e)
+                    self.logger.error("CIAO: {}".format(e))
             else:
                 notification = jmessage["notification"]
                 if notification["sequence"]==0:

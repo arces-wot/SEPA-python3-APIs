@@ -29,8 +29,9 @@
 import prettytable
 import json
 import re
+from sys import stdout
 
-def tablify(input_json,prefix_file=None,destination=None):
+def tablify(input_json,prefix_file=None,destination=stdout):
     """
     This is the method to call when you import tablaze within your program.
     input_json can be given as
@@ -53,7 +54,7 @@ def check_table_equivalence(result,expected,prefixes):
 def main(args):
     # builds prefix dictionary
     prefixes = {}
-    if args["prefixes"] is not None:
+    if ((args["prefixes"] is not None) and (args["prefixes"] != "")):
         try:
             # this is when args["prefixes"] is a path to file
             with open(args["prefixes"],"r") as prefix_file:
@@ -103,6 +104,7 @@ def main(args):
     destination = args["destination"] if ("destination" in args.keys()) else stdout
     if destination is not None:
         print(output,file=destination)
+        return 0
     return output
 
 if __name__ == '__main__':
@@ -110,6 +112,6 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="Blazegraph query output formatter into nice tables")
     parser.add_argument("file", help="Output in json format to be reformatted: can be a path or the full json or 'stdin'")
-    parser.add_argument("-prefixes", default="./prefixes.txt", help="Optional file containing prefixes to be replaced into the table")
+    parser.add_argument("-prefixes", default="", help="Optional file containing prefixes to be replaced into the table")
     args = vars(parser.parse_args())
     sys.exit(main(args))

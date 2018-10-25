@@ -133,15 +133,16 @@ class SAPObject:
         """
         return self.explore(["queries"])
     
-    def getSparql(self,sparqlSet,identifier,forcedBindings={}):
+    def getSparql(self,sparqlSet,identifier,forcedBindings={},bindingCheck=True):
         """
         Get a sparql from the sap, and performs forced bindings check and
         substitution.
         """
         if "forcedBindings" in sparqlSet[identifier]:
             bindings = sparqlSet[identifier]["forcedBindings"]
-            checkBindings(forcedBindings,bindings)
-            for b in forcedBindings.keys():
+            if bindingCheck:
+                checkBindings(forcedBindings,bindings)
+            for b in (set(bindings.keys()) & set(forcedBindings.keys())):
                 bindings[b]["value"] = forcedBindings[b]
         else:
             bindings = {}
@@ -160,6 +161,9 @@ class SAPObject:
             return [ "PREFIX {}: <{}>".format(ns,uri) for ns, uri in namespaces.items() ]
         else:
             return namespaces
+            
+    def update_namespaces(self,ns_id,ns_uri):
+        self.get_namespaces()[ns_id] = ns_uri
 
 def url_builder(protocol,ip_address,port,path):
     """
@@ -201,10 +205,11 @@ def sparqlBuilder(unbound_sparql,bindings,namespaces=[]):
     sparql = " ".join(namespaces) + " " + unbound_sparql
     for b in bindings.keys():
         bValue = bindings[b]["value"]
-        if bindings[b]["type"] == "literal":
-            sparql = sparql.replace("?"+b,"'"+bValue+"'")
-        else:
-            sparql = sparql.replace("?"+b,uriFormat(bValue))
+        if bValue is not None:
+            if (bindings[b]["type"] == "literal") and (bValue != "UNDEF"):
+                sparql = sparql.replace("?"+b,"'"+bValue+"'")
+            else:
+                sparql = sparql.replace("?"+b,uriFormat(bValue))
     return sparql
     
 def generate(   sap_template,

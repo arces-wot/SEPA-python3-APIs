@@ -33,12 +33,13 @@ from sepy.SAPObject import SAPObject, generate, YsapTemplate, defaultdict_to_dic
 from sepy.SEPA import SEPA
 from sepy.tablaze import tablify, check_table_equivalence
 
+
 class SepyTestUnsecure_SAP(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         with open(resource_filename(__name__, "test.ysap"), "r") as sap_file:
             self.ysap = SAPObject(yaml.load(sap_file))
-        self.engine = SEPA(sapObject=self.ysap,logLevel=logging.INFO)
+        self.engine = SEPA(sapObject=self.ysap, logLevel=logging.ERROR)
         self.prefixes = self.ysap.get_namespaces(stringList=True)
         
     def test_0(self):
@@ -54,59 +55,68 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
 | (uri) test:Francesco | (uri) test:dice | (literal) Ciao |
 +----------------------+-----------------+----------------+
 1 result(s)"""
-        self.assertEqual(tablify(result,prefix_file=self.prefixes), expected)
+        self.assertEqual(
+            tablify(result, prefix_file=self.prefixes, destination=None),
+            expected)
         
     def test_2(self):
-        self.assertRaises(KeyError,self.engine.update,"INSERT_VARIABLE_GREETING")
-        self.engine.update("INSERT_VARIABLE_GREETING",
-            forcedBindings={"nome":"test:Fabio","qualcosa":"Hello"})
+        self.assertRaises(
+            KeyError, self.engine.update, "INSERT_VARIABLE_GREETING")
+        self.engine.update(
+            "INSERT_VARIABLE_GREETING",
+            forcedBindings={"nome": "test:Fabio", "qualcosa": "Hello"})
         result = self.engine.query("QUERY_GREETINGS")
-        self.assertTrue(check_table_equivalence(result, \
+        self.assertTrue(
+            check_table_equivalence(result,
 """+----------------------+-----------------+
 |         nome         |     qualcosa    |
 +----------------------+-----------------+
 | (uri) test:Francesco |  (literal) Ciao |
 |   (uri) test:Fabio   | (literal) Hello |
 +----------------------+-----------------+
-2 result(s)""",self.prefixes))
+2 result(s)""", self.prefixes))
         
     def test_3(self):
         from threading import Event
         testEvent = Event()
         subid = ""
         notif_counter = 0
-        def myHandler(added,removed):
+
+        def myHandler(added, removed):
             nonlocal notif_counter
             notif_counter += 1
-            addedObject={}
-            addedObject["head"]={}
-            addedObject["head"]["vars"]=list(added[0].keys())
-            addedObject["results"]={}
-            addedObject["results"]["bindings"]=added
+            addedObject = {}
+            addedObject["head"] = {}
+            addedObject["head"]["vars"] = list(added[0].keys())
+            addedObject["results"] = {}
+            addedObject["results"]["bindings"] = added
             if notif_counter == 1:
-                self.assertTrue(check_table_equivalence(addedObject, \
+                self.assertTrue(check_table_equivalence(addedObject,
 """+----------------------+-----------------+
 |         nome         |     qualcosa    |
 +----------------------+-----------------+
 | (uri) test:Francesco |  (literal) Ciao |
 |   (uri) test:Fabio   | (literal) Hello |
 +----------------------+-----------------+
-2 result(s)""",self.prefixes))
-                self.assertEqual(removed,[])
+2 result(s)""", self.prefixes))
+                self.assertEqual(removed, [])
             elif notif_counter == 2:
-                self.assertTrue(check_table_equivalence(addedObject, \
+                self.assertTrue(check_table_equivalence(addedObject,
 """+--------------------+-----------------+
 |        nome        |     qualcosa    |
 +--------------------+-----------------+
 | (uri) test:Adriano | (literal) Salve |
 +--------------------+-----------------+
-1 result(s)""",self.prefixes))
-                self.assertEqual(removed,[])
+1 result(s)""", self.prefixes))
+                self.assertEqual(removed, [])
                 self.engine.unsubscribe(subid)
                 testEvent.set()
-        subid = self.engine.subscribe("QUERY_GREETINGS","test",handler=myHandler)
-        self.engine.update("INSERT_VARIABLE_GREETING",
-            forcedBindings={"nome":"test:Adriano","qualcosa":"Salve"})
+        
+        subid = self.engine.subscribe(
+            "QUERY_GREETINGS", "test", handler=myHandler)
+        self.engine.update(
+            "INSERT_VARIABLE_GREETING",
+            forcedBindings={"nome": "test:Adriano", "qualcosa": "Salve"})
         self.assertTrue(testEvent.wait(timeout=3))
         self.engine.clear()
     
@@ -159,16 +169,17 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         oauth["register"] = "https://localhost:8443/oauth/register"
         oauth["tokenRequest"] = "https://localhost:8443/oauth/token"
         
-        sap = generate( YsapTemplate,
-                        "localhost",
-                        sparql11,
-                        sparql11se,
-                        queries=queries,
-                        updates=updates,
-                        namespaces=namespaces,
-                        oauth=oauth,
-                        extended=extended)
-        self.assertEqual(yaml.load(sap),self.ysap.parsed_sap)
+        sap = generate(YsapTemplate,
+                       "localhost",
+                       sparql11,
+                       sparql11se,
+                       queries=queries,
+                       updates=updates,
+                       namespaces=namespaces,
+                       oauth=oauth,
+                       extended=extended)
+        self.assertEqual(yaml.load(sap), self.ysap.parsed_sap)
+
 
 if __name__ == '__main__':
     unittest.main(failfast=True)

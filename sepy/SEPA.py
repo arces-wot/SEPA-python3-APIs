@@ -97,7 +97,7 @@ class SEPA:
             jresults = json.loads(results)
             if "error" in jresults:
                 self.logger.error(jresults["error"]["message"])
-                raise
+                raise ValueError(error_message)
             elif destination is not None:
                 with open(destination, "w") as fileDest:
                     print(json.dumps(jresults), file=fileDest)
@@ -105,7 +105,7 @@ class SEPA:
         else:
             error_message = "Query status code: {}".format(status)
             self.logger.error(error_message)
-            except ValueError(error_message)
+            raise ValueError(error_message)
 
     def update(self, sapIdentifier, forcedBindings={},
                host=None, token_url=None, register_url=None):
@@ -140,7 +140,7 @@ class SEPA:
             return results
         else:
             self.logger.error(results)
-            except ValueError(results)
+            raise ValueError(results)
 
     def clear(self, host=None, token_url=None, register_url=None):
         """

@@ -34,6 +34,7 @@ import argparse
 
 from os.path import isfile
 
+
 def tablify(input_json, prefix_file=None, destination=sys.stdout):
     """
     This is the method to call when you import tablaze within your program.
@@ -53,7 +54,8 @@ def tablify(input_json, prefix_file=None, destination=sys.stdout):
 def check_table_equivalence(result, expected, prefixes):
     ex = expected.split("\n")
     ex.sort()
-    table = tablify(result, prefix_file=prefixes).split("\n")
+    table = tablify(result, prefix_file=prefixes,
+                    destination=None).split("\n")
     table.sort()
     return (ex == table)
 
@@ -62,11 +64,11 @@ def main(args):
     # builds prefix dictionary
     prefixes = {}
     if ((args["prefixes"] is not None) and (args["prefixes"] != "")):
-        if isfile(args["prefixes"]):
+        try:
             # this is when args["prefixes"] is a path to file
             with open(args["prefixes"], "r") as prefix_file:
                 lines = prefix_file.readlines()
-        else:
+        except TypeError:
             # this is when it's a list of strings
             lines = args["prefixes"]
             for line in lines:
@@ -78,7 +80,7 @@ def main(args):
         variables = json_output["head"]["vars"]
     except TypeError:
         # loads the json from a file, or tries from the command line argument
-        if isfile(arga["file"]):
+        if isfile(args["file"]):
             with open(args["file"], "r") as bz_output:
                 json_output = json.load(bz_output)
         else:
@@ -108,10 +110,8 @@ def main(args):
                 tableLine.append("")
         pretty.add_row(tableLine)
     output = str(pretty) + "\n{} result(s)".format(len(json_output["results"]["bindings"]))
-    destination = args["destination"] if ("destination" in args.keys()) else stdout
-    if destination is not None:
-        print(output, file=destination)
-        return 0
+    if args["destination"] is not None:
+        print(output, file=args["destination"])
     return output
 
 

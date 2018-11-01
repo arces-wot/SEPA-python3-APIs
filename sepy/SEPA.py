@@ -28,109 +28,155 @@ from .ConnectionHandler import *
 import logging
 import json
 
-class SEPA:    
-    def __init__(self,sapObject=None,logLevel=40):
+
+class SEPA:
+    def __init__(self, sapObject=None, logLevel=logging.ERROR):
+        """
+        Constructor for SEPA engine representation.
+        'sapObject' must be given, to use update, query, subscribe functions.
+        """
         # logger configuration
         self.logger = logging.getLogger("sepaLogger")
         self.logger.setLevel(logLevel)
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logLevel)
         self.logger.debug("=== SEPA::__init__ invoked ===")
-        
+
         # initialize data structures
         self.sap = sapObject
         self.connectionManager = ConnectionHandler(logLevel=logLevel)
-        
-    def get_subscriptions(self):
-        return self.connectionManager.get_subscriptions()
-        
-    def setSAP(self,sapObject):
-        self.sap = sapObject
-        
-    def query(  self,sapIdentifier,forcedBindings={},destination=None,
-                host=None,token_url=None,register_url=None):
-        """
-        Performs a query with the sap entry tag;
-        If you want to store the output of the query somewhere, use the 'destination' field.
-        """
-        sparql = self.sap.getQuery(sapIdentifier,forcedBindings)
-        return self.sparql_query(sparql, destination=destination, host=host,
-            token_url=token_url, register_url=register_url)
 
-        
-    def sparql_query(   self,sparql,destination=None,host=None,
-                        token_url=None,register_url=None):
+    def get_subscriptions(self):
         """
-        Performs a query with the sparql and its forcedBindings;
-        If you want to store the output of the query somewhere, use the 'destination' field.
+        Getter for subscriptions currently opened, in a dict form
+        """
+        return self.connectionManager.get_subscriptions()
+
+    def setSAP(self, sapObject):
+        """
+        Setter of sapObject at runtime.
+        """
+        self.sap = sapObject
+
+    def query(self, sapIdentifier, forcedBindings={}, destination=None,
+              host=None, token_url=None, register_url=None):
+        """
+        Performs a query with the sap entry tag 'sapIdentifier';
+        'forcedBindings' can be given as dict form for substitution.
+        If you want to store the output of the query in a file, use the
+        'destination' field to give the path.
+        'host', 'token_url' and 'register_url' can be given to overwrite
+        the sap values (if any).
+        Returns the output of the query.
+        """
+        sparql = self.sap.getQuery(sapIdentifier, forcedBindings)
+        return self.sparql_query(
+            sparql, destination=destination,
+            host=host, token_url=token_url, register_url=register_url)
+
+    def sparql_query(self, sparql, destination=None, host=None,
+                     token_url=None, register_url=None):
+        """
+        Performs a query with the plain sparql;
+        If you want to store the output of the query in a file, use the
+        'destination' field to give the path.
+        'host', 'token_url' and 'register_url' can be given to overwrite
+        the sap values (if any).
+        Returns the output of the query.
         """
         # perform the query request
         sepa_host = self.sap.query_url if (host is None) else host
         if "https://" in sepa_host:
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
-            status, results = self.connectionManager.secureRequest(sepa_host, 
-                sparql, True, sepa_token, sepa_register)
+            status, results = self.connectionManager.secureRequest(
+                sepa_host, sparql, True, sepa_token, sepa_register)
         else:
-            status, results = self.connectionManager.unsecureRequest(sepa_host, sparql, True)
+            status, results = self.connectionManager.unsecureRequest(
+                sepa_host, sparql, True)
         if int(status) == 200:
             jresults = json.loads(results)
             if "error" in jresults:
                 self.logger.error(jresults["error"]["message"])
                 raise
             elif destination is not None:
-                with open(destination,"w") as fileDest:
-                    print(json.dumps(jresults),file=fileDest)
+                with open(destination, "w") as fileDest:
+                    print(json.dumps(jresults), file=fileDest)
             return jresults
         else:
-            self.logger.error("Query status code: {}".format(status))
-            raise
-        
-    def update( self,sapIdentifier,forcedBindings={},
-                host=None,token_url=None,register_url=None):
+            error_message = "Query status code: {}".format(status)
+            self.logger.error(error_message)
+            except ValueError(error_message)
+
+    def update(self, sapIdentifier, forcedBindings={},
+               host=None, token_url=None, register_url=None):
         """
-        Performs an update with the sap entry tag;
+        Performs an update with the sap entry tag 'sapIdentifier';
+        'forcedBindings' can be given as dict form for substitution.
+        'host', 'token_url' and 'register_url' can be given to overwrite
+        the sap values (if any).
         """
-        sparql = self.sap.getUpdate(sapIdentifier,forcedBindings)
-        return self.sparql_update(sparql, host=host, token_url=token_url, 
-            register_url=register_url)
-        
-    def sparql_update(self,sparql,host=None,token_url=None,register_url=None):
+        sparql = self.sap.getUpdate(sapIdentifier, forcedBindings)
+        return self.sparql_update(sparql, host=host, token_url=token_url,
+                                  register_url=register_url)
+
+    def sparql_update(self, sparql, host=None, token_url=None, register_url=None):
         """
-        Performs an update with the sparql and its forcedBindings;
+        Performs an update with the plain sparql;
+        'host', 'token_url' and 'register_url' can be given to overwrite
+        the sap values (if any).
         """
         # perform the update request
         sepa_host = self.sap.update_url if (host is None) else host
         if "https://" in sepa_host:
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
-            status, results = self.connectionManager.secureRequest(sepa_host, 
-                sparql, False, sepa_token, sepa_register)
+            status, results = self.connectionManager.secureRequest(
+                sepa_host, sparql, False, sepa_token, sepa_register)
         else:
-            status, results = self.connectionManager.unsecureRequest(sepa_host, sparql, False)
+            status, results = self.connectionManager.unsecureRequest(
+                sepa_host, sparql, False)
         # return
         if int(status) == 200:
             return results
         else:
             self.logger.error(results)
-            raise
-        
-    def clear(self,host=None,token_url=None,register_url=None):
+            except ValueError(results)
+
+    def clear(self, host=None, token_url=None, register_url=None):
         """
-        Performs a delete where {?a ?b ?c}
+        Performs a simple 'delete where {?a ?b ?c}'.
+        'host', 'token_url' and 'register_url' can be given to overwrite
+        the sap values (if any).
         """
-        return self.sparql_update("delete where {?a ?b ?c}", host=host, 
+        return self.sparql_update(
+            "delete where {?a ?b ?c}", host=host,
             token_url=token_url, register_url=register_url)
-        
-    def query_all(self,destination=None,host=None,token_url=None,register_url=None):
+
+    def query_all(self, destination=None, host=None,
+                  token_url=None, register_url=None):
         """
-        Performs a select * where {?a ?b ?c}
+        Performs a 'select * where {?a ?b ?c}'
+        If you want to store the output of the query in a file, use the
+        'destination' field to give the path.
+        'host', 'token_url' and 'register_url' can be given to overwrite
+        the sap values (if any).
+        Returns the output of the query
         """
-        return self.sparql_query("select * where {?a ?b ?c}", destination=destination,
+        return self.sparql_query(
+            "select * where {?a ?b ?c}", destination=destination,
             host=host, token_url=token_url, register_url=register_url)
-        
-    def sparql_subscribe(   self,sparql,alias,handler=lambda a,r: None,
-                            host=None,token_url=None,register_url=None, 
-                            default_graph=None, named_graph=None):
+
+    def sparql_subscribe(self, sparql, alias, handler=lambda a, r: None,
+                         host=None, token_url=None, register_url=None,
+                         default_graph=None, named_graph=None):
+        """
+        Subscribes to a specific 'sparql'. The subscription will have its
+        own 'alias'. A 'handler' to be triggered when the subscription starts
+        can be give.
+        'host', 'token_url', 'register_url', 'default_graph' and 'named_graph'
+        can be given to overwrite the sap values (if any).
+        Returns the subscription id.
+        """
         subid = None
         sepa_host = self.sap.subscribe_url if (host is None) else host
         if (default_graph is not None) or ("default-graph-uri" not in self.sap.graphs.keys()):
@@ -144,28 +190,34 @@ class SEPA:
         if "wss://" in sepa_host:
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
-            subid = self.connectionManager.openSecureWebsocket(sepa_host, 
-                sparql, alias, handler, sepa_register, sepa_token)
+            subid = self.connectionManager.openSecureWebsocket(
+                sepa_host, sparql, alias, handler, sepa_register, sepa_token)
         else:
-            subid = self.connectionManager.openUnsecureWebsocket(sepa_host, 
-                sparql, alias, handler, default_graph=def_graph, named_graph=nam_graph)
+            subid = self.connectionManager.openUnsecureWebsocket(
+                sepa_host, sparql, alias, handler, default_graph=def_graph,
+                named_graph=nam_graph)
         return subid
-        
-    def subscribe(  self,sapIdentifier,alias,forcedBindings={},
-                    handler=lambda a,r: None,
-                    host=None,token_url=None,register_url=None, 
-                    default_graph=None, named_graph=None):
+
+    def subscribe(self, sapIdentifier, alias, forcedBindings={},
+                  handler=lambda a, r: None,
+                  host=None, token_url=None, register_url=None,
+                  default_graph=None, named_graph=None):
         """
-        Performs a subscription with the sap identifier tag and its forcedBindings;
-        You can give an 'alias' to the subscription, as well as an handler. 
-        If you don't give the handler, the default null one will be used.
+        Performs a subscription with the sap identifier tag and its
+        forcedBindings; an 'alias' has to be given to the subscription,
+        as well as an handler to be called upon notification.
+        'host', 'token_url', 'register_url', 'default_graph' and 'named_graph'
+        can be given to overwrite the sap values (if any).
         The subscription id is returned.
         """
-        sparql = self.sap.getQuery(sapIdentifier,forcedBindings)
-        return self.sparql_subscribe(sparql, alias, handler, host=host, 
-            token_url=token_url, register_url=register_url, 
+        sparql = self.sap.getQuery(sapIdentifier, forcedBindings)
+        return self.sparql_subscribe(
+            sparql, alias, handler, host=host,
+            token_url=token_url, register_url=register_url,
             default_graph=default_graph, named_graph=named_graph)
-        
-    def unsubscribe(self,subid):
-        # close the subscription, given the id
+
+    def unsubscribe(self, subid):
+        """
+        Closes the subscription, given the subscription id
+        """
         self.connectionManager.closeWebsocket(subid)

@@ -29,9 +29,12 @@
 import prettytable
 import json
 import re
-from sys import stdout
+import sys
+import argparse
 
-def tablify(input_json,prefix_file=None,destination=stdout):
+from os.path import isfile
+
+def tablify(input_json, prefix_file=None, destination=sys.stdout):
     """
     This is the method to call when you import tablaze within your program.
     input_json can be given as
@@ -42,40 +45,43 @@ def tablify(input_json,prefix_file=None,destination=stdout):
         - path to file containing prefix strings from sparql
         - list of prefix strings as "PREFIX smthng: <some_url>
     """
-    return main({"prefixes": prefix_file, "file": input_json, "destination": destination})
-    
-def check_table_equivalence(result,expected,prefixes):
+    return main({"prefixes": prefix_file,
+                 "file": input_json,
+                 "destination": destination})
+
+
+def check_table_equivalence(result, expected, prefixes):
     ex = expected.split("\n")
     ex.sort()
-    table = tablify(result,prefix_file=prefixes).split("\n")
+    table = tablify(result, prefix_file=prefixes).split("\n")
     table.sort()
-    return (ex==table)
+    return (ex == table)
+
 
 def main(args):
     # builds prefix dictionary
     prefixes = {}
     if ((args["prefixes"] is not None) and (args["prefixes"] != "")):
-        try:
+        if isfile(args["prefixes"]):
             # this is when args["prefixes"] is a path to file
-            with open(args["prefixes"],"r") as prefix_file:
+            with open(args["prefixes"], "r") as prefix_file:
                 lines = prefix_file.readlines()
-        except:
+        else:
             # this is when it's a list of strings
             lines = args["prefixes"]
             for line in lines:
                 # here we parse the prefixes
-                m = re.match(r"(prefix|PREFIX)\s+([a-zA-Z]+):\s+<(.+)>",line)
+                m = re.match(r"(prefix|PREFIX)\s+([a-zA-Z]+):\s+<(.+)>", line)
                 prefixes[m.groups()[1]] = m.groups()[2]
-    
     try:
         json_output = args["file"]
         variables = json_output["head"]["vars"]
-    except:
+    except TypeError:
         # loads the json from a file, or tries from the command line argument
-        try:
-            with open(args["file"],"r") as bz_output:
+        if isfile(arga["file"]):
+            with open(args["file"], "r") as bz_output:
                 json_output = json.load(bz_output)
-        except:
+        else:
             json_output = json.loads(json.dumps(args["file"]))
         variables = json_output["head"]["vars"]
     
@@ -88,30 +94,35 @@ def main(args):
         for v in variables:
             if v in binding:
                 nice_value = binding[v]["value"]
-                if binding[v]["type"]!="literal":
+                if binding[v]["type"] != "literal":
                     for key in prefixes.keys():
                         # prefix substitution
-                        nice_value = nice_value.replace(prefixes[key],key+":")
+                        nice_value = nice_value.replace(prefixes[key], key+":")
                 if nice_value != "":
-                    tableLine.append("({}) {}".format(binding[v]["type"],nice_value))
+                    tableLine.append("({}) {}".format(binding[v]["type"],
+                                     nice_value))
                 else:
                     tableLine.append("")
             else:
                 # special case: absent binding
                 tableLine.append("")
         pretty.add_row(tableLine)
-    output = str(pretty)+"\n{} result(s)".format(len(json_output["results"]["bindings"]))
+    output = str(pretty) + "\n{} result(s)".format(len(json_output["results"]["bindings"]))
     destination = args["destination"] if ("destination" in args.keys()) else stdout
     if destination is not None:
-        print(output,file=destination)
+        print(output, file=destination)
         return 0
     return output
 
+
 if __name__ == '__main__':
-    import sys
-    import argparse
-    parser = argparse.ArgumentParser(description="Blazegraph query output formatter into nice tables")
-    parser.add_argument("file", help="Output in json format to be reformatted: can be a path or the full json or 'stdin'")
-    parser.add_argument("-prefixes", default="", help="Optional file containing prefixes to be replaced into the table")
+    parser = argparse.ArgumentParser(
+        description="Blazegraph query output formatter into nice tables")
+    parser.add_argument(
+        "file",
+        help="Output in json format to be reformatted: can be a path or the full json or 'stdin'")
+    parser.add_argument(
+        "-prefixes", default="",
+        help="Optional file containing prefixes to be replaced into the table")
     args = vars(parser.parse_args())
     sys.exit(main(args))

@@ -33,6 +33,36 @@ from sepy.SAPObject import SAPObject, generate, YsapTemplate, defaultdict_to_dic
 from sepy.SEPA import SEPA
 from sepy.tablaze import tablify, check_table_equivalence
 
+EXPECTED_TABLE_test1 = """+----------------------+-----------------+----------------+
+|          a           |        b        |       c        |
++----------------------+-----------------+----------------+
+| (uri) test:Francesco | (uri) test:dice | (literal) Ciao |
++----------------------+-----------------+----------------+
+1 result(s)"""
+
+EXPECTED_TABLE_test2 = """+----------------------+-----------------+
+|         nome         |     qualcosa    |
++----------------------+-----------------+
+| (uri) test:Francesco |  (literal) Ciao |
+|   (uri) test:Fabio   | (literal) Hello |
++----------------------+-----------------+
+2 result(s)"""
+
+EXPECTED_TABLE_test3a = """+----------------------+-----------------+
+|         nome         |     qualcosa    |
++----------------------+-----------------+
+| (uri) test:Francesco |  (literal) Ciao |
+|   (uri) test:Fabio   | (literal) Hello |
++----------------------+-----------------+
+2 result(s)"""
+
+EXPECTED_TABLE_test3b = """+--------------------+-----------------+
+|        nome        |     qualcosa    |
++--------------------+-----------------+
+| (uri) test:Adriano | (literal) Salve |
++--------------------+-----------------+
+1 result(s)"""
+
 
 class SepyTestUnsecure_SAP(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -48,16 +78,10 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
     def test_1(self):
         self.engine.update("INSERT_GREETING")
         result = self.engine.query_all()
-        expected = \
-"""+----------------------+-----------------+----------------+
-|          a           |        b        |       c        |
-+----------------------+-----------------+----------------+
-| (uri) test:Francesco | (uri) test:dice | (literal) Ciao |
-+----------------------+-----------------+----------------+
-1 result(s)"""
+
         self.assertEqual(
             tablify(result, prefix_file=self.prefixes, destination=None),
-            expected)
+                    EXPECTED_TABLE_test1)
         
     def test_2(self):
         self.assertRaises(
@@ -66,15 +90,8 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             "INSERT_VARIABLE_GREETING",
             forcedBindings={"nome": "test:Fabio", "qualcosa": "Hello"})
         result = self.engine.query("QUERY_GREETINGS")
-        self.assertTrue(
-            check_table_equivalence(result,
-"""+----------------------+-----------------+
-|         nome         |     qualcosa    |
-+----------------------+-----------------+
-| (uri) test:Francesco |  (literal) Ciao |
-|   (uri) test:Fabio   | (literal) Hello |
-+----------------------+-----------------+
-2 result(s)""", self.prefixes))
+        self.assertTrue(check_table_equivalence(
+            result, EXPECTED_TABLE_test2, self.prefixes))
         
     def test_3(self):
         from threading import Event
@@ -91,23 +108,12 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             addedObject["results"] = {}
             addedObject["results"]["bindings"] = added
             if notif_counter == 1:
-                self.assertTrue(check_table_equivalence(addedObject,
-"""+----------------------+-----------------+
-|         nome         |     qualcosa    |
-+----------------------+-----------------+
-| (uri) test:Francesco |  (literal) Ciao |
-|   (uri) test:Fabio   | (literal) Hello |
-+----------------------+-----------------+
-2 result(s)""", self.prefixes))
+                self.assertTrue(check_table_equivalence(
+                    addedObject, EXPECTED_TABLE_test3a, self.prefixes))
                 self.assertEqual(removed, [])
             elif notif_counter == 2:
-                self.assertTrue(check_table_equivalence(addedObject,
-"""+--------------------+-----------------+
-|        nome        |     qualcosa    |
-+--------------------+-----------------+
-| (uri) test:Adriano | (literal) Salve |
-+--------------------+-----------------+
-1 result(s)""", self.prefixes))
+                self.assertTrue(check_table_equivalence(
+                    addedObject, EXPECTED_TABLE_test3b, self.prefixes))
                 self.assertEqual(removed, [])
                 self.engine.unsubscribe(subid)
                 testEvent.set()

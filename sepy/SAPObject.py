@@ -267,6 +267,15 @@ def uriFormat(uri):
         return "<"+uri+">"
 
 
+def expand_prefixed_uri(uri, namespaces):
+    """
+    This function takes an 'uri' as rdf:type and transforms it into
+    the long format <http://...>, looking in the 'namespaces' given
+    """
+    splitted_uri = uri.split(":",1)
+    return uriFormat(namespaces[splitted_uri[0]]+splitted_uri[1])
+
+
 def sparqlBuilder(unbound_sparql, bindings, namespaces=[]):
     """
     Forced bindings substitution into unbounded SPARQL

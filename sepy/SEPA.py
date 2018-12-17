@@ -25,6 +25,8 @@
 from .SAPObject import SAPObject
 from .ConnectionHandler import *
 
+from urllib.parse import urlparse
+
 import logging
 import json
 
@@ -84,15 +86,22 @@ class SEPA:
         Returns the output of the query.
         """
         # perform the query request
+        if self.sap is None and host is None:
+            raise ValueError("Host parametrization is necessary if no SAPObject is given to SEPA instance")
         sepa_host = self.sap.query_url if (host is None) else host
-        if "https://" in sepa_host:
+        protocol = urlparse(sepa_host).scheme
+        if protocol == "https":
+            if self.sap is None and (token_url is None or register_url is None):
+                raise ValueError("Token and Register URL must not be None if no SAPObject is given to SEPA instance")
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
             status, results = self.connectionManager.secureRequest(
                 sepa_host, sparql, True, sepa_token, sepa_register)
-        else:
+        elif protocol == "http":
             status, results = self.connectionManager.unsecureRequest(
                 sepa_host, sparql, True)
+        else:
+            raise NotImplementedError("Still only http, https, ws, wss protocols are implemented")
         if int(status) == 200:
             jresults = json.loads(results)
             if "error" in jresults:
@@ -126,15 +135,23 @@ class SEPA:
         the sap values (if any).
         """
         # perform the update request
+        if self.sap is None and host is None:
+            raise ValueError("Host parametrization is necessary if no SAPObject is given to SEPA instance")
         sepa_host = self.sap.update_url if (host is None) else host
-        if "https://" in sepa_host:
+        protocol = urlparse(sepa_host).scheme
+        
+        if protocol == "https":
+            if self.sap is None and (token_url is None or register_url is None):
+                raise ValueError("Token and Register URL must not be None if no SAPObject is given to SEPA instance")
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
             status, results = self.connectionManager.secureRequest(
                 sepa_host, sparql, False, sepa_token, sepa_register)
-        else:
+        elif protocol == "http":
             status, results = self.connectionManager.unsecureRequest(
                 sepa_host, sparql, False)
+        else:
+            raise NotImplementedError("Still only http, https, ws, wss protocols are implemented")
         # return
         if int(status) == 200:
             return results
@@ -178,24 +195,35 @@ class SEPA:
         Returns the subscription id.
         """
         subid = None
+        if self.sap is None and host is None:
+            raise ValueError("Host parametrization is necessary if no SAPObject is given to SEPA instance")
         sepa_host = self.sap.subscribe_url if (host is None) else host
-        if (default_graph is not None) or ("default-graph-uri" not in self.sap.graphs.keys()):
+        protocol = urlparse(sepa_host).scheme
+        
+        def_graph = None
+        if default_graph is not None:
             def_graph = default_graph
-        else:
+        elif self.sap is not None and "default-graph-uri" in self.sap.graphs.keys():
             def_graph = self.sap.graphs["default-graph-uri"]
-        if (named_graph is not None) or ("named-graph-uri" not in self.sap.graphs.keys()):
-            nam_graph = named_graph
-        else:
+        nam_graph = None
+        if named_graph is not None:
+            nam_graph = default_graph
+        elif self.sap is not None and "named-graph-uri" in self.sap.graphs.keys():
             nam_graph = self.sap.graphs["named-graph-uri"]
-        if "wss://" in sepa_host:
+        
+        if protocol == "wss":
+            if self.sap is None and (token_url is None or register_url is None):
+                raise ValueError("Token and Register URL must not be None if no SAPObject is given to SEPA instance")
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
             subid = self.connectionManager.openSecureWebsocket(
                 sepa_host, sparql, alias, handler, sepa_register, sepa_token)
-        else:
+        elif protocol == "ws":
             subid = self.connectionManager.openUnsecureWebsocket(
                 sepa_host, sparql, alias, handler, default_graph=def_graph,
                 named_graph=nam_graph)
+        else:
+            raise NotImplementedError("Still only http, https, ws, wss protocols are implemented")
         return subid
 
     def subscribe(self, sapIdentifier, alias, forcedBindings={},

@@ -22,7 +22,7 @@
 #  
 #  
 
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 from os.path import split, abspath, isfile
 from pkg_resources import resource_filename
@@ -117,11 +117,11 @@ class SAPObject:
         According to SAP data, this method builds up the query url to
         which send query requests.
         """
-        return url_builder(
+        return urlunparse([
             self.sparql11protocol(path=["protocol"]),
-            self.host,
-            self.sparql11protocol(path=["port"]),
-            self.sparql11protocol(["query", "path"]))
+            "{}:{}".format(self.host, self.sparql11protocol(path=["port"])),
+            self.sparql11protocol(["query", "path"]),
+            "", "", ""])
 
     @property
     def update_url(self):
@@ -129,11 +129,11 @@ class SAPObject:
         According to SAP data, this method builds up the update url to
         which send update requests
         """
-        return url_builder(
-            self.sparql11protocol(["protocol"]),
-            self.host,
-            self.sparql11protocol(["port"]),
-            self.sparql11protocol(["update", "path"]))
+        return urlunparse([
+            self.sparql11protocol(path=["protocol"]),
+            "{}:{}".format(self.host, self.sparql11protocol(path=["port"])),
+            self.sparql11protocol(["update", "path"]),
+            "", "", ""])
 
     @property
     def subscribe_url(self):
@@ -142,13 +142,11 @@ class SAPObject:
         to which send subscription and unsubscription requests
         """
         use_protocol = self.sparql11seprotocol(["protocol"])
-        return url_builder(
+        return urlunparse([
             use_protocol,
-            self.host,
-            self.sparql11seprotocol(
-                ["availableProtocols", use_protocol, "port"]),
-            self.sparql11seprotocol(
-                ["availableProtocols", use_protocol, "path"]))
+            "{}:{}".format(self.host, self.sparql11seprotocol(["availableProtocols", use_protocol, "port"])),
+            self.sparql11seprotocol(["availableProtocols", use_protocol, "path"]),
+            "", "", ""])
 
     @property
     def updates(self):
@@ -226,14 +224,6 @@ class SAPObject:
         self.get_namespaces()[ns_id] = ns_uri
 
 
-def url_builder(protocol, ip_address, port, path=""):
-    """
-    Builds an url from the given parameters.
-    protocol://ip_address:port[path]
-    """
-    return "{}://{}:{}{}".format(protocol, ip_address, port, path)
-
-
 def checkBindings(current, expected):
     """
     This method checks that you give the appropriate forced bindings
@@ -256,7 +246,7 @@ def checkBindings(current, expected):
 
 def uriFormat(uri):
     """
-    Checks if 'uri' is being formatted as rdf:type, or 
+    Checks if 'uri' is being formatted as rdf:type, or
     <http://www.google.it>
     """
     parseBN_URI = urlparse(uri)
@@ -272,7 +262,7 @@ def expand_prefixed_uri(uri, namespaces):
     This function takes an 'uri' as rdf:type and transforms it into
     the long format <http://...>, looking in the 'namespaces' given
     """
-    splitted_uri = uri.split(":",1)
+    splitted_uri = uri.split(":", 1)
     return uriFormat(namespaces[splitted_uri[0]]+splitted_uri[1])
 
 

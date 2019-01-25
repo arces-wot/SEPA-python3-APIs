@@ -18,7 +18,8 @@ setuptools.setup(name='sepy',
           "websocket-client",
           "argparse",
           "prettytable",
-          "pyyaml"
+          "pyyaml",
+          "jinja2"
       ],
       include_package_data=True,
       zip_safe=False)

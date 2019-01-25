@@ -1,3 +1,11 @@
+# This is the old version. Switch to dev-0.9.5 branch
+
+
+
+
+
+
+
 # SEPA-python3-APIs
 Client-side libraries for the SEPA platform (Python3)
 

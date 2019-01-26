@@ -2,6 +2,9 @@
 Client-side libraries for the SEPA platform (Python3)
 
 ## Installation and usage
+```
+$ pip3 install sepy
+```
 
 Clone the repository.
 

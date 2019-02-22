@@ -26,6 +26,7 @@ from pkg_resources import resource_filename
 
 import unittest
 from collections import defaultdict
+from urllib.parse import urlparse
 
 import logging
 import yaml
@@ -64,18 +65,34 @@ EXPECTED_TABLE_test3b = """+--------------------+-----------------+
 1 result(s)"""
 
 
-class SepyTestUnsecure_SAP(unittest.TestCase):
+class SepyTestSecure_SAP(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        with open(resource_filename(__name__, "testUnsecure.ysap"), "r") as sap_file:
+        with open(resource_filename(__name__, "testSecure.ysap"), "r") as sap_file:
             self.ysap = SAPObject(yaml.load(sap_file))
-        self.engine = SEPA(sapObject=self.ysap, logLevel=logging.DEBUG)
+        self.engine = SEPA(sapObject=self.ysap, client_id="TEST-SECURE", logLevel=logging.ERROR)
         self.prefixes = self.ysap.get_namespaces(stringList=True)
-        
+    
     def test_0(self):
+        parsed_url = urlparse(self.ysap.query_url)
+        self.assertEqual(parsed_url.scheme, "https")
+        
+        parsed_url = urlparse(self.ysap.registration_url)
+        self.assertEqual(parsed_url.scheme, "https")
+        
+        parsed_url = urlparse(self.ysap.registration_url)
+        self.assertEqual(parsed_url.scheme, "https")
+        
+        parsed_url = urlparse(self.ysap.update_url)
+        self.assertEqual(parsed_url.scheme, "https")
+        
+        parsed_url = urlparse(self.ysap.subscribe_url)
+        self.assertEqual(parsed_url.scheme, "wss")
+    
+    def test_1(self):
         self.engine.clear()
             
-    def test_1(self):
+    def test_2(self):
         self.engine.update("INSERT_GREETING")
         result = self.engine.query_all()
 
@@ -83,7 +100,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
             tablify(result, prefix_file=self.prefixes, destination=None),
                     EXPECTED_TABLE_test1)
         
-    def test_2(self):
+    def test_3(self):
         self.assertRaises(
             KeyError, self.engine.update, "INSERT_VARIABLE_GREETING")
         self.engine.update(
@@ -93,7 +110,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         self.assertTrue(check_table_equivalence(
             result, EXPECTED_TABLE_test2, self.prefixes))
         
-    def test_3(self):
+    def test_4(self):
         from threading import Event
         testEvent = Event()
         subid = ""
@@ -115,6 +132,7 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
                 self.assertTrue(check_table_equivalence(
                     addedObject, EXPECTED_TABLE_test3b, self.prefixes))
                 self.assertEqual(removed, [])
+                self.engine.unsubscribe(subid)
                 testEvent.set()
         
         subid = self.engine.subscribe(
@@ -122,69 +140,8 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         self.engine.update(
             "INSERT_VARIABLE_GREETING",
             forcedBindings={"nome": "test:Adriano", "qualcosa": "Salve"})
-        self.assertTrue(testEvent.wait())
-        self.engine.unsubscribe(subid)
+        self.assertTrue(testEvent.wait(timeout=3))
         self.engine.clear()
-    
-    def test_4(self):
-        nested_dict = lambda: defaultdict(nested_dict)
-        
-        sparql11 = nested_dict()
-        sparql11["protocol"] = "http"
-        sparql11["port"] = 8000
-        sparql11["query"]["path"] = "/query"
-        sparql11["query"]["method"] = "POST"
-        sparql11["query"]["format"] = "JSON"
-        sparql11["update"]["path"] = "/update"
-        sparql11["update"]["method"] = "POST"
-        sparql11["update"]["format"] = "JSON"
-        
-        sparql11se = nested_dict()
-        sparql11se["protocol"] = "ws"
-        sparql11se["availableProtocols"]["ws"]["port"] = 9000
-        sparql11se["availableProtocols"]["ws"]["path"] = "/subscribe"
-        sparql11se["availableProtocols"]["wss"]["port"] = 9443
-        sparql11se["availableProtocols"]["wss"]["path"] = "/secure/subscribe"
-        sparql11se = defaultdict_to_dict(sparql11se)
-        
-        queries = nested_dict()
-        queries["QUERY_GREETINGS"]["sparql"] = "select * where {?nome test:dice ?qualcosa}"
-
-        updates = nested_dict()
-        updates["INSERT_GREETING"]["sparql"] = "insert data {test:Francesco test:dice 'Ciao'}"
-        updates["INSERT_VARIABLE_GREETING"]["sparql"] = "insert data {?nome test:dice ?qualcosa}"
-        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["nome"]["type"] = "uri"
-        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["nome"]["value"] = "\"\""
-        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["qualcosa"]["type"] = "literal"
-        updates["INSERT_VARIABLE_GREETING"]["forcedBindings"]["qualcosa"]["value"] = "\"\""
-        updates = defaultdict_to_dict(updates)
-        
-        extended = nested_dict()
-        extended["type"] = "basic"
-        extended["base"] = 0
-        extended["clients"] = 10
-        extended["messages"] = 1
-        
-        namespaces = nested_dict()
-        namespaces["schema"] = "http://schema.org"
-        namespaces["rdf"] = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        namespaces["test"] = "http://wot.arces.unibo.it/test#"
-        
-        oauth = nested_dict()
-        oauth["enable"] = "false"
-        oauth["register"] = "https://localhost:8443/oauth/register"
-        oauth["tokenRequest"] = "https://localhost:8443/oauth/token"
-        
-        sap = generate(YsapTemplate,
-                       "localhost",
-                       sparql11,
-                       sparql11se,
-                       queries=queries,
-                       updates=updates,
-                       namespaces=namespaces,
-                       oauth=oauth,
-                       extended=extended)
-        self.assertEqual(yaml.load(sap), self.ysap.parsed_sap)
 
 
 if __name__ == '__main__':

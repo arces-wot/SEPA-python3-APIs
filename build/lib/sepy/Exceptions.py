@@ -30,3 +30,6 @@ class RegistrationFailedException(Exception):
 
 class TokenRequestFailedException(Exception):
     pass
+
+class SubscriptionTimeoutException(Exception):
+    pass

@@ -14,6 +14,8 @@ sepy.egg-info/dependency_links.txt
 sepy.egg-info/not-zip-safe
 sepy.egg-info/requires.txt
 sepy.egg-info/top_level.txt
+sepy/tests/SepyTestSecure_SAP.py
 sepy/tests/SepyTestUnsecure_SAP.py
 sepy/tests/__init__.py
-sepy/tests/test.ysap
+sepy/tests/testSecure.ysap
+sepy/tests/testUnsecure.ysap

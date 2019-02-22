@@ -1,4 +1,4 @@
-#!/usr/bin python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 #
 #  SEPA.py
@@ -32,10 +32,11 @@ import json
 
 
 class SEPA:
-    def __init__(self, sapObject=None, logLevel=logging.ERROR):
+    def __init__(self, sapObject=None, client_id=None, logLevel=logging.ERROR):
         """
         Constructor for SEPA engine representation.
         'sapObject' must be given, to use update, query, subscribe functions.
+        'client_id
         """
         # logger configuration
         self.logger = logging.getLogger("sepaLogger")
@@ -45,7 +46,13 @@ class SEPA:
 
         # initialize data structures
         self.sap = sapObject
-        self.connectionManager = ConnectionHandler(logLevel=logLevel)
+        self.connectionManager = ConnectionHandler(client_id=client_id, logLevel=logLevel)
+    
+    def get_client_id(self):
+        """
+        Retrieves the current client_id.
+        """
+        return self.connectionManager.get_client_id()
 
     def get_subscriptions(self):
         """
@@ -146,7 +153,7 @@ class SEPA:
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
             status, results = self.connectionManager.secureRequest(
-                sepa_host, sparql, False, sepa_token, sepa_register)
+                sepa_host, sparql, False, sepa_register, sepa_token)
         elif protocol == "http":
             status, results = self.connectionManager.unsecureRequest(
                 sepa_host, sparql, False)
@@ -217,7 +224,8 @@ class SEPA:
             sepa_token = self.sap.tokenRequest_url if (token_url is None) else token_url
             sepa_register = self.sap.registration_url if (register_url is None) else register_url
             subid = self.connectionManager.openSecureWebsocket(
-                sepa_host, sparql, alias, handler, sepa_register, sepa_token)
+                sepa_host, sparql, alias, handler, sepa_register, sepa_token,
+                default_graph=def_graph, named_graph=nam_graph)
         elif protocol == "ws":
             subid = self.connectionManager.openUnsecureWebsocket(
                 sepa_host, sparql, alias, handler, default_graph=def_graph,

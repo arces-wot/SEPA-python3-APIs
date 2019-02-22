@@ -67,7 +67,7 @@ EXPECTED_TABLE_test3b = """+--------------------+-----------------+
 class SepyTestUnsecure_SAP(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        with open(resource_filename(__name__, "test.ysap"), "r") as sap_file:
+        with open(resource_filename(__name__, "testUnsecure.ysap"), "r") as sap_file:
             self.ysap = SAPObject(yaml.load(sap_file))
         self.engine = SEPA(sapObject=self.ysap, logLevel=logging.ERROR)
         self.prefixes = self.ysap.get_namespaces(stringList=True)
@@ -115,7 +115,6 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
                 self.assertTrue(check_table_equivalence(
                     addedObject, EXPECTED_TABLE_test3b, self.prefixes))
                 self.assertEqual(removed, [])
-                self.engine.unsubscribe(subid)
                 testEvent.set()
         
         subid = self.engine.subscribe(
@@ -123,7 +122,8 @@ class SepyTestUnsecure_SAP(unittest.TestCase):
         self.engine.update(
             "INSERT_VARIABLE_GREETING",
             forcedBindings={"nome": "test:Adriano", "qualcosa": "Salve"})
-        self.assertTrue(testEvent.wait(timeout=3))
+        self.assertTrue(testEvent.wait())
+        self.engine.unsubscribe(subid)
         self.engine.clear()
     
     def test_4(self):

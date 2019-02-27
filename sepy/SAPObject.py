@@ -54,10 +54,9 @@ class SAPObject:
         Generic SAP dictionary explorer.
         path is a list of indices to be followed according to SEPADocs.
         """
-        item = None
+        item = self.parsed_sap
         try:
-            item = self.parsed_sap[path[0]]
-            for tag in path[1::]:
+            for tag in path:
                 item = item[tag]
         except KeyError as ke:
             self.logger.error(ke)

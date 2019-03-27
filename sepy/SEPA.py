@@ -257,3 +257,9 @@ class SEPA:
         Closes the subscription, given the subscription id
         """
         self.connectionManager.closeWebsocket(subid)
+
+    def storeJWT(self, path):
+        self.connectionManager.storeJWT(path)
+        
+    def readJWT(self, path):
+        self.connectionManager.readJWT(path)

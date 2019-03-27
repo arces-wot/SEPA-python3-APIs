@@ -1,5 +1,5 @@
+websocket-client
 argparse
-jinja2
 prettytable
 pyyaml
-websocket-client
+jinja2

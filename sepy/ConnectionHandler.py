@@ -27,6 +27,7 @@ import requests
 import logging
 import json
 import sys
+import pickle
 
 from ssl import CERT_NONE
 from websocket import WebSocketApp
@@ -57,8 +58,12 @@ class ConnectionHandler:
         
         # secure request objects
         self.token = None
+        self.token_type = None
         self.client_secret = None
         self.client_id = client_id if client_id else str(uuid4())
+        self.auth_client_id = None
+        self.auth_client_secret = None
+        self.tokenExpiration = 0
         
     def get_client_id(self):
         """
@@ -66,6 +71,26 @@ class ConnectionHandler:
         """
         return self.client_id
 
+    def storeJWT(self, path):
+        with open(path, "wb") as jwtBin:
+            pickle.dump(self.auth_client_id, jwtBin)
+            pickle.dump(self.auth_client_secret, jwtBin)
+            pickle.dump(self.token, jwtBin)
+            pickle.dump(self.token_type, jwtBin)
+            pickle.dump(self.tokenExpiration, jwtBin)
+        
+    def readJWT(self, path):
+        with open(path, "rb") as jwtBin:
+            self.auth_client_id = pickle.load(jwtBin)
+            self.auth_client_secret = pickle.load(jwtBin)
+            self.client_secret = "Basic {}".format(
+                b64encode(bytes(
+                    "{}:{}".format(self.auth_client_id, self.auth_client_secret), 
+                    "utf-8")).decode("utf-8"))
+            self.token = pickle.load(jwtBin)
+            self.token_type = pickle.load(jwtBin)
+            self.tokenExpiration = pickle.load(jwtBin)
+        
     def unsecureRequest(self, reqURI, sparql, isQuery):
         """
         Method to issue a SPARQL request over HTTP.
@@ -153,10 +178,12 @@ class ConnectionHandler:
             # parse the response
             jresponse = json.loads(r.text)["credentials"]
 
+            self.auth_client_id = jresponse["client_id"]
+            self.auth_client_secret = jresponse["client_secret"]
             # encode with base64 client_id and client_secret
             self.client_secret = "Basic {}".format(
                 b64encode(bytes(
-                    "{}:{}".format(jresponse["client_id"],jresponse["client_secret"]), 
+                    "{}:{}".format(self.auth_client_id, self.auth_client_secret), 
                     "utf-8")).decode("utf-8"))
         else:
             print("{}: {}".format(r.status_code, r.text))
@@ -189,7 +216,10 @@ class ConnectionHandler:
         r.connection.close()
         if r.status_code == 201:
             self.logger.debug(r.text)
-            self.token = json.loads(r.text)["token"]["access_token"]
+            jResponse = json.loads(r.text)["token"]
+            self.token = jResponse["access_token"]
+            self.token_type = jResponse["token_type"]
+            self.token_expire = jResponse["expires_in"]
         else:
             raise TokenRequestFailedException
 

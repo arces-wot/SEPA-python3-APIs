@@ -1,5 +1,5 @@
 setuptools==36.2.7
 requests==2.18.1
 websocket_client==0.48.0
-PyYAML==3.12
+PyYAML==5.1
 jinja2>=2.10

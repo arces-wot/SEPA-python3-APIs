@@ -79,7 +79,7 @@ class ConnectionHandler:
         headers = {
             "Content-Type":"application/sparql-query" if isQuery else "application/sparql-update", 
             "Accept":"application/sparql-results+json"}
-        r = requests.post(reqURI, headers=headers, data=sparql)
+        r = requests.post(reqURI, headers=headers, data=sparql.encode('utf-8'))
         r.connection.close()
         return r.status_code, r.text
 
@@ -113,7 +113,7 @@ class ConnectionHandler:
            "Content-Type":"application/sparql-query" if isQuery else "application/sparql-update", 
            "Accept":"application/json",
            "Authorization": "Bearer " + self.token}
-        r = requests.post(reqURI, headers=headers, data=sparql, verify=False)        
+        r = requests.post(reqURI, headers=headers, data=sparql.encode('utf-8'), verify=False)        
         r.connection.close()
             
         # check for errors on token validity
@@ -146,7 +146,7 @@ class ConnectionHandler:
 
         # perform the request
         self.logger.debug("RegisterURI: {}".format(registerURI))
-        r = requests.post(registerURI, headers=headers, data=payload, verify=False)        
+        r = requests.post(registerURI, headers=headers, data=payload.encode('utf-8'), verify=False)        
         r.connection.close()
         
         if r.status_code == 201:

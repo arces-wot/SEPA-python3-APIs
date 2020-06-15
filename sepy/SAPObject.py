@@ -274,7 +274,10 @@ def sparqlBuilder(unbound_sparql, bindings, namespaces=[]):
         bValue = bindings[b]["value"]
         if bValue is not None:
             if (bindings[b]["type"] == "literal") and (bValue != "UNDEF"):
-                sparql = sparql.replace("?"+b, "'"+bValue+"'")
+                if "datatype" in bindings[b].keys() and bindings[b]["datatype"] is not None:
+                    sparql = sparql.replace("?"+b, "'"+bValue+"'^^"+bindings[b]["datatype"])
+                else:
+                    sparql = sparql.replace("?"+b, "'"+bValue+"'")
             else:
                 sparql = sparql.replace("?"+b, uriFormat(bValue))
     return sparql
